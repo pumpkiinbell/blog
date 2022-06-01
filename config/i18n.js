@@ -25,11 +25,4 @@ const localeConfigs = {
   },
 };
 
-module.exports = Object.assign(
-  {},
-  {
-    defaultLocale,
-    locales,
-    localeConfigs,
-  },
-);
+module.exports = Object.assign({}, { defaultLocale, locales, localeConfigs });

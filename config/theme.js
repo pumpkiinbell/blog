@@ -85,12 +85,4 @@ const prism = {
   darkTheme: darkCodeTheme,
 };
 
-module.exports = Object.assign(
-  {},
-  {
-    colorMode,
-    navbar,
-    footer,
-    prism,
-  },
-);
+module.exports = Object.assign({}, { colorMode, navbar, footer, prism });

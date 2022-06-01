@@ -22,7 +22,10 @@ const config = {
   themeConfig,
   plugins: [],
   themes: [],
-  presets: [['classic', presets.classic]],
+  presets: [
+    ['classic', presets.classic],
+    ['@docusaurus/plugin-client-redirects', presets.redirects],
+  ],
   staticDirectories: ['static'],
   scripts: [],
   stylesheets: [],
