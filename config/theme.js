@@ -8,19 +8,24 @@ const colorMode = {
 };
 
 const navbar = {
-  title: 'My Site',
+  hideOnScroll: true,
   logo: {
-    alt: 'My Site Logo',
-    src: '../static/img/logo.svg',
+    alt: 'logo',
+    src: '/logos/pumpkin-bell.svg',
+    href: '/',
+    target: '_self',
   },
   items: [
     {
       type: 'doc',
-      docId: 'intro',
+      docId: 'index',
+      label: 'Document',
       position: 'left',
-      label: 'Tutorial',
     },
-    { to: '/blog', label: 'Blog', position: 'left' },
+    {
+      type: 'search',
+      position: 'right',
+    },
     {
       href: 'https://github.com/facebook/docusaurus',
       label: 'GitHub',
@@ -37,7 +42,7 @@ const footer = {
       items: [
         {
           label: 'Tutorial',
-          to: '/docs/intro',
+          to: '/docs',
         },
       ],
     },

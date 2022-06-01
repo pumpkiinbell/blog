@@ -8,8 +8,8 @@ const { i18n, presets, themeConfig } = require('./config');
 const config = {
   title: 'pumpkinbell',
   url: 'https://pumpkinbell.com',
-  baseUrl: '/',
-  favicon: '/img/favicon.ico',
+  baseUrl: '/docs/',
+  favicon: '/img/meta/favicon.ico',
   trailingSlash: false,
   i18n,
   noIndex: false,

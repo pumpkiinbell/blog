@@ -1,5 +1,7 @@
 ---
-sidebar_position: 1
+title: Introduction to Blog
+sidebar_label: Overview
+slug: /index
 ---
 
 # Tutorial Intro
