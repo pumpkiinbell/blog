@@ -12,7 +12,7 @@ const navbar = {
   logo: {
     alt: 'logo',
     src: '/logos/pumpkin-bell.svg',
-    href: '/',
+    href: '/docs',
     target: '_self',
   },
   items: [
@@ -27,7 +27,7 @@ const navbar = {
       position: 'right',
     },
     {
-      href: 'https://github.com/facebook/docusaurus',
+      href: 'https://github.com/jonghopark95',
       label: 'GitHub',
       position: 'right',
     },

@@ -4,13 +4,15 @@ const i18n = require('./i18n');
 const presets = require('./presets');
 const themeConfig = require('./theme');
 
+const BASE_URL = '/docs';
+
 /**
  * @type {import('@docusaurus/types').Config}
  */
 const config = {
   title: 'pumpkinbell',
   url: 'https://pumpkinbell.com',
-  baseUrl: '/docs/',
+  baseUrl: `${BASE_URL}/`,
   favicon: '/img/meta/favicon.ico',
   trailingSlash: false,
   i18n,
