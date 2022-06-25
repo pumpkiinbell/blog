@@ -17,7 +17,7 @@ const config = {
   trailingSlash: false,
   i18n,
   noIndex: false,
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'throw',
   onDuplicateRoutes: 'throw',
   tagline: '개발 이야기와 소소한 잡담을 써놓은 블로그',
