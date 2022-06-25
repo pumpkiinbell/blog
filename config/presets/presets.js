@@ -1,20 +1,14 @@
 // @ts-check
 
-const sidebarPath = require.resolve('./sidebars');
-const customCssPath = require.resolve('./custom.css');
+const docs = require('./docs');
+const customCssPath = require.resolve('../styles/custom.scss');
 
 /**
  * @type {import('@docusaurus/preset-classic').Options}
  */
 const classic = {
   debug: false,
-  docs: {
-    path: 'docs',
-    routeBasePath: '/',
-    sidebarPath,
-    breadcrumbs: false,
-    sidebarCollapsed: false,
-  },
+  docs,
   blog: false,
   pages: false,
   sitemap: false,

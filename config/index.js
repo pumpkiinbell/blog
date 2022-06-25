@@ -24,7 +24,7 @@ const config = {
   organizationName: 'https://github.com/jonghopark95',
   projectName: 'blog',
   themeConfig,
-  plugins: [],
+  plugins: ['docusaurus-plugin-sass'],
   themes: [],
   presets: [
     ['classic', presets.classic],
