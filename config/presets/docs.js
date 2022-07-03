@@ -1,6 +1,6 @@
 const docsOptions = {
   // meta options
-  routeBasePath: '/',
+  routeBasePath: 'docs',
   editCurrentVersion: false,
   editLocalizedFiles: false,
   numberPrefixParser: (filename) => ({ filename }),

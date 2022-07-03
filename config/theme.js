@@ -18,18 +18,18 @@ const navbar = {
   items: [
     {
       type: 'doc',
-      docId: 'index',
-      label: 'Document',
       position: 'left',
+      label: 'Documents',
+      docId: 'index',
     },
     {
       type: 'search',
       position: 'right',
     },
     {
-      href: 'https://github.com/jonghopark95',
-      label: 'GitHub',
       position: 'right',
+      label: 'GitHub',
+      href: 'https://github.com/pumpkiinbell',
     },
   ],
 };

@@ -4,15 +4,13 @@ const i18n = require('./i18n');
 const presets = require('./presets');
 const themeConfig = require('./theme');
 
-const BASE_URL = '/docs';
-
 /**
  * @type {import('@docusaurus/types').Config}
  */
 const config = {
   title: 'pumpkinbell',
-  url: 'https://pumpkinbell.com',
-  baseUrl: `${BASE_URL}/`,
+  url: 'https://www.pumpkiinbell.com',
+  baseUrl: '/',
   favicon: '/img/meta/favicon.ico',
   trailingSlash: false,
   i18n,
@@ -21,7 +19,7 @@ const config = {
   onBrokenMarkdownLinks: 'throw',
   onDuplicateRoutes: 'throw',
   tagline: '개발 이야기와 소소한 잡담을 써놓은 블로그',
-  organizationName: 'https://github.com/jonghopark95',
+  organizationName: 'https://github.com/pumpkiinbell',
   projectName: 'blog',
   themeConfig,
   plugins: ['docusaurus-plugin-sass'],
