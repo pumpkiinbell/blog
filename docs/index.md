@@ -1,10 +1,9 @@
 ---
-title: Introduction to Blog
 sidebar_label: Overview
 slug: /
 ---
 
-# Introduction to Blog
+# Overview
 
 Document 페이지에 있는 문서들은 특정 개념을 학습하면서 제가 이해하기 쉽게 재구성하고, 수정한 문서들이 포함되어 있습니다.
 

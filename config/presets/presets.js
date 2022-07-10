@@ -9,7 +9,15 @@ const customCssPath = require.resolve('../styles/custom.scss');
 const classic = {
   debug: false,
   docs,
-  blog: false,
+  blog: {
+    blogTitle: 'Blog',
+    showReadingTime: true,
+    readingTime: ({ content, defaultReadingTime }) => defaultReadingTime({ content, options: { wordsPerMinute: 300 } }),
+    feedOptions: {
+      type: 'rss',
+      copyright: '@ 박종호, All rights reserved',
+    },
+  },
   pages: false,
   sitemap: false,
   theme: { customCss: customCssPath },

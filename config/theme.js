@@ -12,10 +12,15 @@ const navbar = {
   logo: {
     alt: 'logo',
     src: '/logos/logo.png',
-    href: '/docs',
+    href: '/blog',
     target: '_self',
   },
   items: [
+    {
+      position: 'left',
+      label: 'Blog',
+      to: 'blog',
+    },
     {
       type: 'doc',
       position: 'left',
