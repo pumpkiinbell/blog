@@ -1,4 +1,4 @@
-# Object property's attributes in JS
+# JavaScript 에서의 Object 프로퍼티 속성
 
 JS 에서 property 는 object 를 이루는 핵심입니다.
 

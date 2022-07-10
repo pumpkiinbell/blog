@@ -1,10 +1,6 @@
-## Suspense
+# Suspense
 
-- [Suspense for Data Fetching](https://reactjs.org/docs/concurrent-mode-suspense.html#for-library-authors)
-
-- [You Can throw() Anything In JavaScript](https://www.bennadel.com/blog/4210-you-can-throw-anything-in-javascript-and-other-async-await-considerations.htm)
-
-Suspense 는 데이터를 포함한 어떤 것이든 fetching 중 기다리는 작업을 선언적으로 작성할 수 있게 해준다.
+Suspense 는 데이터를 포함한 어떤 것이든 fetching 중 기다리는 작업을 선언적으로 작성할 수 있게 해줍니다.
 
 이는 이미지, script, 또는 어떤 비동기 동작이든 포함한다.
 
@@ -43,11 +39,11 @@ function ProfileTimeline() {
 }
 ```
 
-위의 예에선 ProfileDetails 를 render 하려고 시도하지만, data fetch 가 아직 안되어 있으므로 suspend 된다.
+위의 예에선 ProfileDetails 를 render 하려고 시도하지만, data fetch 가 아직 안되어 있으므로 suspend 됩니다.
 
-리액트는 이를 skip 하고 트리 내의 다른 컴포넌트를 렌더링 하기 위해 시도한다.
+React 는 이를 skip 하고 트리 내의 다른 컴포넌트를 렌더링 하기 위해 시도합니다.
 
-렌더링 할게 없지만 `suspended: true` 인 컴포넌트가 있는 경우, 가장 가까운 `fallback` 을 보여준다.
+렌더링 할게 없지만 `suspended: true` 인 컴포넌트가 있는 경우, 가장 가까운 `fallback` 을 보여줍니다.
 
 ### 원리
 
@@ -210,17 +206,8 @@ React query suspense mode 는 fetch-on-render 의 경우에 적합함
 - [ui event to start loading query before they mounted](https://reactjs.org/docs/concurrent-mode-suspense.html#start-fetching-early)
 - before start importing or mounting their parent components
 
----
+### References
 
-### throw
+- [Suspense for Data Fetching](https://reactjs.org/docs/concurrent-mode-suspense.html#for-library-authors)
 
-throw 는 뭐든 던질 수 있다.
-
-### 토스에선...
-
-- fetch-on-render
-
-  - data! => 타입 가드
-  - nullable
-
-- **항상 Suspense 를 사용하고 있지는 않음. 사용자, 개발자 경험을 높여줄 수 있는 경우에만 이를 활용**
+- [You Can throw() Anything In JavaScript](https://www.bennadel.com/blog/4210-you-can-throw-anything-in-javascript-and-other-async-await-considerations.htm)
