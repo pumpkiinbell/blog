@@ -7,8 +7,7 @@ authors: pumpkiinbell
 
 **TL;DR**
 
-useState 초기 값으로 함수를 넣으면 컴포넌트 초기 렌더링 될 때만 해당 함수를 호출하여 사용하고,
-re-render 시에는 이를 사용하지 않는다.
+useState 초기 값으로 함수를 넣으면 컴포넌트 초기 렌더링 될 때만 해당 함수를 호출하여 사용하고, re-render 시에는 이를 사용하지 않는다.
 
 <!--truncate-->
 
