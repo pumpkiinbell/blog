@@ -39,7 +39,17 @@ const navbar = {
   ],
 };
 
-const footer = {};
+const footer = {
+  links: [
+    {
+      html: `
+        Powered by <a href="https://docusaurus.io/" target="_blank" rel="noreferrer noopener">Docusaurus 2</a>, Hosted by <a href="https://vercel.com/" target="_blank" rel="noreferrer noopener">Vercel</a>
+        <br/>
+        @ <a href="https://github.com/pumpkiinbell" target="_blank" rel="noreferrer noopener">박종호</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ko" target="_blank" rel="noreferrer noopener">All rights reserved.</a>
+      `,
+    },
+  ],
+};
 
 const prism = {
   theme: lightCodeTheme,
