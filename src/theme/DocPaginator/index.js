@@ -1,14 +1,14 @@
 import React from 'react';
-import BlogPostPaginator from '@theme-original/BlogPostPaginator';
+import DocPaginator from '@theme-original/DocPaginator';
 
 import useUtterance from '../../hooks/useUtterance';
 
-export default function BlogPostPaginatorWrapper(props) {
+export default function DocPaginatorWrapper(props) {
   const { anchor } = useUtterance();
 
   return (
     <>
-      <BlogPostPaginator {...props} />
+      <DocPaginator {...props} />
       <div ref={anchor} />
     </>
   );
