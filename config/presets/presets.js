@@ -14,7 +14,7 @@ const classic = {
     showReadingTime: true,
     readingTime: ({ content, defaultReadingTime }) => defaultReadingTime({ content, options: { wordsPerMinute: 300 } }),
     feedOptions: {
-      type: 'rss',
+      type: 'all',
       copyright: '@ 박종호, All rights reserved',
     },
   },
