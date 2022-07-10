@@ -8,71 +8,48 @@ const colorMode = {
 };
 
 const navbar = {
-  title: 'My Site',
+  hideOnScroll: true,
   logo: {
-    alt: 'My Site Logo',
-    src: '../static/img/logo.svg',
+    alt: 'Site Logo',
+    src: '/logos/homepage.png',
+    srcDark: '/logos/homepage-dark-mode.png',
+    href: '/blog',
+    target: '_self',
   },
   items: [
     {
-      type: 'doc',
-      docId: 'intro',
       position: 'left',
-      label: 'Tutorial',
+      label: 'Blog',
+      to: 'blog',
     },
-    { to: '/blog', label: 'Blog', position: 'left' },
     {
-      href: 'https://github.com/facebook/docusaurus',
-      label: 'GitHub',
+      type: 'doc',
+      position: 'left',
+      label: 'Documents',
+      docId: 'index',
+    },
+    {
+      type: 'search',
       position: 'right',
+    },
+    {
+      position: 'right',
+      label: 'GitHub',
+      href: 'https://github.com/pumpkiinbell',
     },
   ],
 };
 
 const footer = {
-  style: 'dark',
   links: [
     {
-      title: 'Docs',
-      items: [
-        {
-          label: 'Tutorial',
-          to: '/docs/intro',
-        },
-      ],
-    },
-    {
-      title: 'Community',
-      items: [
-        {
-          label: 'Stack Overflow',
-          href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-        },
-        {
-          label: 'Discord',
-          href: 'https://discordapp.com/invite/docusaurus',
-        },
-        {
-          label: 'Twitter',
-          href: 'https://twitter.com/docusaurus',
-        },
-      ],
-    },
-    {
-      title: 'More',
-      items: [
-        {
-          label: 'Blog',
-          to: '/blog',
-        },
-        {
-          label: 'GitHub',
-          href: 'https://github.com/facebook/docusaurus',
-        },
-      ],
+      html: `
+        Powered by <a href="https://docusaurus.io/" target="_blank" rel="noreferrer noopener">Docusaurus 2</a>, Hosted by <a href="https://vercel.com/" target="_blank" rel="noreferrer noopener">Vercel</a>
+        <br/>
+        @ <a href="https://github.com/pumpkiinbell" target="_blank" rel="noreferrer noopener">박종호</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ko" target="_blank" rel="noreferrer noopener">All rights reserved.</a>
+      `,
     },
   ],
-  copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
 };
 
 const prism = {
@@ -80,12 +57,4 @@ const prism = {
   darkTheme: darkCodeTheme,
 };
 
-module.exports = Object.assign(
-  {},
-  {
-    colorMode,
-    navbar,
-    footer,
-    prism,
-  },
-);
+module.exports = Object.assign({}, { colorMode, navbar, footer, prism });

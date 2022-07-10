@@ -12,7 +12,7 @@ const locales = ['ko', 'en'];
  */
 const localeConfigs = {
   ko: {
-    label: 'Korean',
+    label: '한국어',
     direction: 'ltr',
     htmlLang: 'ko-kr',
     calendar: 'gregory',
@@ -25,11 +25,4 @@ const localeConfigs = {
   },
 };
 
-module.exports = Object.assign(
-  {},
-  {
-    defaultLocale,
-    locales,
-    localeConfigs,
-  },
-);
+module.exports = Object.assign({}, { defaultLocale, locales, localeConfigs });
