@@ -1,5 +1,6 @@
 ---
 date: 2022-07-10T17:42
+authors: pumpkiinbell
 ---
 
 # useState 의 초기 값에 함수를 넣으면 어떻게 될까?
