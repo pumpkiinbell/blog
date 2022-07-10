@@ -33,7 +33,7 @@ function createUtteranceScript(option?: Record<string, unknown>) {
 
 const defaultAttributes = {
   repo: 'pumpkiinbell/blog',
-  'issue-term': 'https://github.com/pumpkiinbell/blog/issues',
+  'issue-term': 'title',
   label: 'comment',
   theme: 'github-light',
 };
