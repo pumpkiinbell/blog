@@ -126,3 +126,8 @@ Object.defineProperty(obj3, 'b', { value: 2, enumerable: true });
 ```
 
 enumerable 은 false 이지만, configurable 이 true 이기 때문에 2번 방식과 같이 수정할 수도 있습니다.
+
+## References
+
+- [Object.defineProperty()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+- [for...of](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of#difference_between_for...of_and_for...in)

@@ -11,7 +11,7 @@ const navbar = {
   hideOnScroll: true,
   logo: {
     alt: 'logo',
-    src: '/logos/pumpkin-bell.svg',
+    src: '/logos/logo.png',
     href: '/docs',
     target: '_self',
   },

@@ -4,10 +4,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'JavaScript',
-      // link: {
-      //   type: 'doc',
-      //   id: 'javascript/index',
-      // },
       items: [
         {
           type: 'category',
@@ -19,10 +15,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'React',
-      // link: {
-      //   type: 'doc',
-      //   id: 'react/index',
-      // },
       items: ['react/suspense'],
     },
   ],
