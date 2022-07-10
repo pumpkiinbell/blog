@@ -1,4 +1,4 @@
 {
   "redirects": [{ "source": "/", "destination": "/blog" }],
-  "trailingSlash": true
+  "trailingSlash": false
 }
