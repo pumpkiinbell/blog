@@ -10,8 +10,9 @@ const colorMode = {
 const navbar = {
   hideOnScroll: true,
   logo: {
-    alt: 'logo',
+    alt: 'Site Logo',
     src: '/logos/homepage.png',
+    srcDark: '/logos/homepage-dark-mode.png',
     href: '/blog',
     target: '_self',
   },
