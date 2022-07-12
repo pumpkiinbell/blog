@@ -1,7 +1,8 @@
 // @ts-check
 
 const docs = require('./docs');
-const customCssPath = require.resolve('../styles/custom.scss');
+const blog = require('./blog');
+const customCssPath = require.resolve('./styles/custom.scss');
 
 /**
  * @type {import('@docusaurus/preset-classic').Options}
@@ -9,15 +10,7 @@ const customCssPath = require.resolve('../styles/custom.scss');
 const classic = {
   debug: false,
   docs,
-  blog: {
-    blogTitle: 'Blog',
-    showReadingTime: true,
-    readingTime: ({ content, defaultReadingTime }) => defaultReadingTime({ content, options: { wordsPerMinute: 300 } }),
-    feedOptions: {
-      type: 'all',
-      copyright: '@ 박종호, All rights reserved',
-    },
-  },
+  blog,
   pages: false,
   sitemap: false,
   theme: { customCss: customCssPath },
