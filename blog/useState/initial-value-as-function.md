@@ -1,7 +1,7 @@
 ---
 date: 2022-07-10T17:42
 authors: pumpkiinbell
-title: 'useState 의 초기 값에 함수를 넣으면 어떻게 될까?'
+title: 'useState initial value as function'
 description: 'useState 초기 값으로 함수를 넣으면 컴포넌트 초기 렌더링 될 때만 해당 함수를 호출하여 사용하고, re-render 시에는 이를 사용하지 않는다.'
 keywords: ['React', 'React Hooks']
 tags:
@@ -9,7 +9,7 @@ tags:
   - React Hooks
 ---
 
-# useState 의 초기 값에 함수를 넣으면 어떻게 될까?
+# useState initial value as function
 
 useState 는 initialValue 를 초기 렌더링 시점에만 사용합니다. 즉, 익명 함수나 함수 레퍼런스를 넣으면 초기 렌더링 시점에만 해당 함수를 호출합니다.
 
@@ -144,9 +144,3 @@ useState 가 처음 호출될 때 바로 초기화를 위한 작업을 하는 �
 그렇게 흔한 케이스는 아니지만, 이 lazy initialization 을 사용하여 컴포넌트 최적화를 할 수 있습니다.
 
 조금 더 실용적인 케이스로 초기 값으로 LocalStorage 에서 값을 가져올 경우, 위 방법을 사용하여 `re-render` 시 File I/O 비용을 줄일 수 있습니다.
-
-## 참고
-
-- [Lazy initial state](https://reactjs.org/docs/hooks-reference.html#lazy-initial-state)
-- [When to use useState initial value as function?](https://stackoverflow.com/questions/60120261/when-to-use-usestate-initial-value-as-function)
-- [useState lazy initialization and function updates](https://kentcdodds.com/blog/use-state-lazy-initialization-and-function-updates)

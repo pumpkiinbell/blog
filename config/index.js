@@ -8,7 +8,7 @@ const themeConfig = require('./theme');
  * @type {import('@docusaurus/types').Config}
  */
 const config = {
-  title: 'pumpkinbell',
+  title: 'pumpkiinbell',
   url: 'https://www.pumpkiinbell.com',
   baseUrl: '/',
   favicon: '/img/meta/favicon.ico',
