@@ -3,15 +3,16 @@ date: 2022-07-10T17:42
 authors: pumpkiinbell
 title: 'useState initial value as function'
 description: 'useState 초기 값으로 함수를 넣으면 컴포넌트 초기 렌더링 될 때만 해당 함수를 호출하여 사용하고, re-render 시에는 이를 사용하지 않는다.'
-keywords: ['React', 'React Hooks']
+keywords: ['React', 'React Hooks', 'useState']
 tags:
   - React
   - React Hooks
+  - useState
 ---
 
 # useState initial value as function
 
-useState 는 initialValue 를 초기 렌더링 시점에만 사용합니다. 즉, 익명 함수나 함수 레퍼런스를 넣으면 초기 렌더링 시점에만 해당 함수를 호출합니다.
+useState 는 initialValue 를 초기 렌더링 시점에만 사용합니다. <br/>즉, 익명 함수나 함수 레퍼런스를 넣으면 초기 렌더링 시점에만 해당 함수를 호출합니다.
 
 <!--truncate-->
 
