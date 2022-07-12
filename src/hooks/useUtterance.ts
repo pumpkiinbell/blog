@@ -1,17 +1,32 @@
 import { useEffect, useRef } from 'react';
-import { useColorMode } from '@docusaurus/theme-common';
 
-export default function useUtterance() {
-  const anchor = useRef<HTMLDivElement>(null);
-  const { colorMode } = useColorMode();
+export type Params = {
+  repo: string;
+  theme:
+    | 'github-light'
+    | 'github-dark'
+    | 'preferred-color-scheme'
+    | 'github-dark-orange'
+    | 'icy-dark'
+    | 'dark-blue'
+    | 'photon-dark'
+    | 'boxy-light'
+    | 'gruvbox-dark';
+  label?: string;
+  'issue-term'?: 'pathname' | 'url' | 'title' | 'og:title';
+  'issue-number'?: string;
+};
+
+export default function useUtterance<T extends HTMLElement>(params?: Params) {
+  const anchor = useRef<T>(null);
 
   useEffect(() => {
     while (anchor.current.firstChild) {
       anchor.current.removeChild(anchor.current.firstChild);
     }
 
-    anchor.current.appendChild(createUtteranceScript({ theme: `github-${colorMode}` }));
-  }, [colorMode]);
+    anchor.current.appendChild(createUtteranceScript(params));
+  }, [params]);
 
   return { anchor };
 }
@@ -31,8 +46,7 @@ function createUtteranceScript(option?: Record<string, unknown>) {
 }
 
 const defaultAttributes = {
-  repo: 'pumpkiinbell/blog',
   'issue-term': 'title',
-  label: 'comment',
+  label: '',
   theme: 'github-light',
 };
