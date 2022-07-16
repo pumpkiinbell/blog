@@ -15,7 +15,10 @@ const classic = {
   sitemap: false,
   theme: { customCss: customCssPath },
   googleAnalytics: undefined,
-  gtag: undefined,
+  gtag: {
+    trackingID: 'G-QPZ4TD71N8',
+    anonymizeIP: true,
+  },
 };
 
 /**
