@@ -3,7 +3,13 @@ title: ES6 이전의 Module System
 description: ''
 ---
 
-### DIY Module
+## Pre Module
+
+> _1990년대 중반 ~ 2000년대 초반_
+
+dfdf
+
+## DIY Module
 
 ES6 이전엔 IIFE 로 변수의 전역 공간으로서의 노출을 막을 수 있었습니다.
 
@@ -38,7 +44,7 @@ counter.minusCount();
 console.log(counter.getCount()); // 1
 ```
 
-### CommonJS
+## CommonJS
 
 Node.js 진영에서 자주 사용하는 모듈 시스템입니다.
 
@@ -52,7 +58,7 @@ CommonJS format 은 아래와 같은 특징을 가지고 있습니다.
 - 동기적으로 파일들을 가져오는 특성 상 정적 분석이 가능합니다.
 - [순환 의존성을 지원합니다.](https://blog.outsider.ne.kr/1283)
 
-### Asynchronous Module Definition (AMD)
+## Asynchronous Module Definition (AMD)
 
 브라우저 진영에서 자주 사용하던 모듈 시스템입니다.
 
@@ -77,7 +83,8 @@ require(["dependencies", ...], function(MyModules, ...){
 });
 ```
 
-### 참고
+## Further Readings
 
+- [JavaScript Modules Past & Presents](https://www.youtube.com/watch?v=GQ96b_u7rGc&t=2325s)
 - [Exploring ES6](https://exploringjs.com/es6/ch_modules.html#static-module-structure)
 - [Why AMD](https://requirejs.org/docs/whyamd.html)
