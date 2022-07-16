@@ -22,8 +22,6 @@ property 의 접근 여부를 결정할 수도 있고, 수정 여부를 결정�
 
 해당 문서에서는 이 속성들에 대해 알아보고, 관련한 키워드들에 대해서도 살펴봅니다.
 
-<br />
-
 ## Object.defineProperty()
 
 해당 속성들을 살펴보기에 앞서, [Object.defineProperty()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty) 라는 메서드에 대해 알아보겠습니다.
@@ -51,8 +49,6 @@ Object.defineProperty(obj, 'key', {
   enumerable: true,
 }); // => { key: 'nationality' };
 ```
-
-<br />
 
 ## writable, configurable, enumerable
 
@@ -82,8 +78,6 @@ enumrable 은 해당 프로퍼티가 열거 가능한지 결정합니다.
 
 Object.defineProperty() 에서 기본값은 false 입니다.
 
-<br />
-
 ## enumerable 과 관련된 statement, method
 
 ### for ... in
@@ -111,8 +105,6 @@ Object keys, values, entries 를 Object 를 순회하며 key, value, [key, value
 
 주의할 점은, 해당 메서드들이 enumerable 한 property 들만 순회한다는 점입니다.
 만약 enumerable 하지 않은 key 도 필요한 경우, [Object.getOwnPropertyNames()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames) 같은 메서드들을 사용해야 합니다.
-
-<br />
 
 ## {} vs Object.create
 
@@ -151,8 +143,6 @@ Object.defineProperty(obj3, 'b', { value: 2, enumerable: true });
 ```
 
 enumerable 은 false 이지만, configurable 이 true 이기 때문에 2번 방식과 같이 수정할 수도 있습니다.
-
-<br />
 
 ## Further Readings
 

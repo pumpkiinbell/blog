@@ -1,9 +1,17 @@
 ---
-title: ES6 module 의 문법
-description: ''
+title: ES6 Module 의 Syntax
+description: '해당 문서에선 ES6 모듈의 문법인 `export, import`,
+그리고 `type="module"`을 붙인 스크립트와 그렇지 않은 스크립트의 차이점에 대해서 알아봅니다.'
+tags:
+  - Module
+  - export
+  - import
+  - type="module"
 ---
 
-### export
+해당 문서에선 ES6 모듈의 문법인 `export, import`, 그리고 `type="module"`을 붙인 스크립트와 그렇지 않은 스크립트의 차이점에 대해서 알아봅니다.
+
+## export
 
 `export` 되는 모듈은 항상 `strict mode` 입니다.
 
@@ -12,7 +20,7 @@ description: ''
 `export` 는 다음 두 가지 스타일의 방식이 있습니다.
 
 - Named Exports (하나의 모듈에 0 ~ N 개의 대상을 내보낼 수 있습니다.)
-- Defualt Exports (하나의 모듈에 1개의 대상만 내보낼 수 있습니다.)
+- Default Exports (하나의 모듈에 1개의 대상만 내보낼 수 있습니다.)
 
 **_named exports_**
 
@@ -81,7 +89,7 @@ import { default as divide } from './divide.js';
 export { add, divide };
 ```
 
-### import
+## import
 
 `export` 와 마찬가지로 import 되는 대상은 항상 `strict mode` 에 있습니다.
 
@@ -119,4 +127,23 @@ import { myExport } from '/modules/my-module.js';
 import { foo, bar } from '/modules/my-module.js';
 ```
 
-Further Readings
+## `<script> vs <script type='module'>`
+
+ES6 로 파일을 모듈 방식으로 불러오려면 `<script type='module'>` 과 같이 작성해야 합니다.
+
+이 방식을 취하면 `<script>` 와 아래와 같은 차이를 보입니다.
+
+- strict mode
+  - 후자는 `use strict ` 같은 구문의 존재 여부와 관계 없이 `strict mode` 에 존재하게 됩니다.
+- 변수 범위
+  - 전자는 top-level 에 있는 변수들이 `global` 객체에 존재하게 됩니다. 후자는 모듈 공간에서의 top-level 로 존재하며 export 하지 않으면 다른 모듈에서 참조할 수 없습니다.
+- 실행 방식
+  - 전자는 대상 파일을 동기적으로 실행합니다. 후자는 비동기적으로 실행합니다. 이 때문에 import 하는 대상의 load 여부를 염두하지 않고 코드를 작성할 수 있습니다.
+- import, export 구문 사용 가능 여부
+  - 전자는 `import` 구문을 사용할 수 없습니다. 어떤 파일을 읽어오려면 `import()` 를 사용해야 합니다.
+
+## Further Readings
+
+- [Exploring ES6](https://exploringjs.com/es6/ch_modules.html#static-module-structure)
+- [MDN - import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)
+- [MDN - export](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export)
