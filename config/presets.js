@@ -21,11 +21,4 @@ const classic = {
   },
 };
 
-/**
- * @type {import("@docusaurus/plugin-client-redirects").Options}
- */
-const redirects = {
-  redirects: [{ from: '/', to: '/docs' }],
-};
-
-module.exports = Object.assign({}, { classic, redirects });
+module.exports = Object.assign({}, { classic });

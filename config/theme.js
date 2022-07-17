@@ -61,6 +61,7 @@ const metadata = [
   { name: 'keywords', content: 'blog, javascript, react, frontend' },
   { name: 'author', content: 'Jongho Park' },
   { property: 'og:type', content: 'website' },
+  { property: 'og:description', content: 'website' },
   { property: 'og:site_name', content: 'Blog by pumpkiinbell' },
   { property: 'og:locale', content: 'ko_KR' },
   { property: 'og:image', content: 'https://www.pumpkiinbell.com/img/meta/image.png' },
