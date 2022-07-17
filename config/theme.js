@@ -57,4 +57,18 @@ const prism = {
   darkTheme: darkCodeTheme,
 };
 
-module.exports = Object.assign({}, { colorMode, navbar, footer, prism });
+const metadata = [
+  { name: 'keywords', content: 'blog, javascript, react, frontend' },
+  { name: 'author', content: 'Jongho Park' },
+  { property: 'og:type', content: 'website' },
+  { property: 'og:site_name', content: 'Blog by pumpkiinbell' },
+  { property: 'og:locale', content: 'ko_KR' },
+  { property: 'og:image', content: 'https://www.pumpkiinbell.com/img/meta/image.png' },
+  { property: 'og:image:secure_url', content: 'https://www.pumpkiinbell.com/img/meta/image.png' },
+  { property: 'og:image:type', content: 'image/jpeg' },
+  { property: 'og:image:width', content: '1200' },
+  { property: 'og:image:height', content: '630' },
+  { property: 'og:image:alt', content: 'Blog Thumbnail' },
+];
+
+module.exports = Object.assign({}, { colorMode, navbar, footer, prism, metadata });
