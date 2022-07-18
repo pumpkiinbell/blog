@@ -10,7 +10,7 @@ const colorMode = {
 const navbar = {
   hideOnScroll: true,
   logo: {
-    alt: 'Site Logo',
+    alt: 'Logo',
     src: '/logos/homepage.png',
     srcDark: '/logos/homepage-dark-mode.png',
     href: '/blog',
@@ -70,7 +70,7 @@ const metadata = [
   { name: 'author', content: 'Jongho Park' },
   { property: 'og:type', content: 'website' },
   { property: 'og:description', content: 'website' },
-  { property: 'og:site_name', content: 'Blog by pumpkiinbell' },
+  { property: 'og:site_name', content: 'pumpkiinbell.com' },
   { property: 'og:locale', content: 'ko_KR' },
   { property: 'og:image', content: 'https://www.pumpkiinbell.com/img/meta/image.png' },
   { property: 'og:image:secure_url', content: 'https://www.pumpkiinbell.com/img/meta/image.png' },

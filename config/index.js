@@ -8,7 +8,7 @@ const themeConfig = require('./theme');
  * @type {import('@docusaurus/types').Config}
  */
 const config = {
-  title: 'pumpkiinbell',
+  title: 'Blog by pumpkiinbell',
   url: 'https://www.pumpkiinbell.com',
   baseUrl: '/',
   favicon: '/img/meta/favicon.ico',
@@ -28,7 +28,7 @@ const config = {
   scripts: [],
   stylesheets: [],
   clientModules: [],
-  titleDelimiter: '|',
+  titleDelimiter: ' | ',
   baseUrlIssueBanner: false,
 };
 
