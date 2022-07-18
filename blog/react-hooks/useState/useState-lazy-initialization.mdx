@@ -1,0 +1,140 @@
+---
+date: 2022-07-10T17:42
+authors: pumpkiinbell
+title: 'useState Lazy Initialization'
+description: 'useState 는 초기값을 처음 렌더링 시에만 사용합니다. 초기값 할당을 위해 소모되는 비용이 큰 함수라면 함수 레퍼런스나 익명 함수로 렌더링 지연을 방지할 수 있습니다.'
+keywords: ['React', 'React Hooks', 'useState']
+tags:
+  - React
+  - React Hooks
+---
+
+useState 는 초기값을 첫 호출시에만 사용합니다. 초기값 할당을 위해 소모되는 비용이 큰 함수라면 함수 레퍼런스나 익명 함수로 렌더링 지연을 방지할 수 있습니다.
+
+<!--truncate-->
+
+## 시작
+
+React 유저라면 필연적으로 useState 를 자주 사용하고 있을 것입니다. 우리는 상태의 초기값을 위해 useState 의 인자로 값을 넣어줍니다.
+
+```tsx
+const [state, setState] = useState(1);
+```
+
+useState 의 인자에는 number, string, array, object 어떤 것이든 값을 넣어 상태의 초기값을 할당해줄 수 있습니다.
+
+헌데, 함수도 초기 값으로 할당할 수 있다는 점을 알고 계셨나요?
+
+```tsx
+/*
+ * Returns a stateful value, and a function to update it.
+ */
+function useState<S>(initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>];
+```
+
+useState 는 위와 같이 정의되어 있습니다.
+
+initialState 는 General 한 타입인 S와, 반환 타입이 S인 콜백 함수를 인자로 받을 수 있습니다.
+
+따라서, 아래의 표현식은 아무런 문법적 오류도 일어나지 않습니다.
+
+```tsx
+const [state, setState] = useState(() => 1);
+```
+
+왜 React 팀은 초기 값으로 콜백 함수를 받을 수 있게 했을까요?
+
+## 의의
+
+처음 언급했다시피, 초기값은 처음 컴포넌트를 렌더링 할 때 단 한번만 필요합니다.
+
+다음과 같은 케이스를 생각해봅시다.
+
+```tsx
+export default function App() {
+  const [state, setState] = useState(1);
+
+  return (
+    <div className="App">
+      <button onClick={() => setState((prev) => prev + 1)}>button</button>
+      <p>count: {state}</p>
+    </div>
+  );
+}
+```
+
+useState 는 처음 호출되었을 때 초기값 `1` 을 사용하고, 이후 `re-render` 되는 경우 다시 사용하지 않습니다.
+
+만약, 상태가 변경된다면 변경된 값을 사용하면 되고, 다른 요인으로 인해 재호출 되면 이미 갖고 있는 값을 사용하면 되니 당연한 말이겠죠.
+
+그런데, 초기 값을 위해 연산 비용이 큰 함수를 호출한 값을 사용한다면 어떨까요?
+
+```tsx
+export default function App() {
+  const [state, setState] = useState(반환값을_위해_5초가_걸리는_함수());
+
+  return (
+    <div className="App">
+      <button onClick={() => setState((prev) => prev + 1)}>button</button>
+      <p>count: {state}</p>
+    </div>
+  );
+}
+```
+
+App 컴포넌트가 처음 렌더링 될 때 useState 는 초기값을 필요로 하고, 동기적으로 이 값을 기다리고 렌더링 될 것입니다.
+
+여기까진 문제가 없지만, 버튼을 클릭하면 문제가 생깁니다.
+
+<iframe
+  src="https://codesandbox.io/embed/usestate-initial-value-as-function-1-5pormp?fontsize=14&hidenavigation=1&theme=dark"
+  width="100%"
+  height="300"
+  title="UseState Initial Value as Function-2"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+/>
+
+눈에 띄게 렌더링이 지연됩니다. 왜 이렇게 될까요?
+
+App 컴포넌트는 상태가 바뀌었으므로 `re-render` 되며 컴포넌트 내부의 로직을 다시 호출할 것입니다.
+
+이 때, useState 의 인자로 넣어준 함수 호출식은 초기값을 사용하지 않음에도 호출됩니다. 이 때문에 렌더링 지연이 발생하는 것입니다.
+
+이는 우리가 원한 동작 방식이 아닙니다. 어떻게 해결해야 할까요?
+
+초기 값으로 함수를 넣어줬을 때의 함수를 넣어줌으로써 해결할 수 있습니다.
+
+```tsx
+export default function App() {
+  const [state, setState] = useState(() => {
+    return 반환값을_위해_5초가_걸리는_함수();
+  });
+
+  return (
+    <div className="App">
+      <button onClick={() => setState((prev) => prev + 1)}>button</button>
+      <p>count: {state}</p>
+    </div>
+  );
+}
+```
+
+처음 컴포넌트가 렌더링될 때 useState 는 초기값이 함수이면 전달된 함수를 호출합니다.
+
+이전 케이스와 달리, `re-render` 가 되면 이 값을 사용하지 않으므로 UI blocking 이 사라진 모습을 확인할 수 있습니다.
+
+<iframe
+  src="https://codesandbox.io/embed/usestate-initial-value-as-function-2-vmpbg7?fontsize=14&hidenavigation=1&theme=dark"
+  width="100%"
+  height="300"
+  title="UseState Initial Value as Function-2"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+/>
+
+## 정리
+
+위와 같은 방법을 `useState lazy initialization` 이라고 합니다.
+
+이러한 방식을 이용하여 초기값을 위해 비싼 비용이 드는 함수가 있다면, 함수를 초기값으로 할당하여 렌더링 지연을 방지할 수 있습니다.
