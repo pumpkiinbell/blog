@@ -57,6 +57,14 @@ const prism = {
   darkTheme: darkCodeTheme,
 };
 
+const algolia = {
+  appId: 'C2S6VDJYN8',
+  apiKey: 'a58ba2287b97280a67887fa6f93c78db',
+  indexName: 'pumpkiinbell',
+  // https://discourse.algolia.com/t/algolia-searchbar-is-not-working-with-docusaurus-v2/14659/2
+  contextualSearch: false,
+};
+
 const metadata = [
   { name: 'keywords', content: 'blog, javascript, react, frontend' },
   { name: 'author', content: 'Jongho Park' },
@@ -72,4 +80,4 @@ const metadata = [
   { property: 'og:image:alt', content: 'Blog Thumbnail' },
 ];
 
-module.exports = Object.assign({}, { colorMode, navbar, footer, prism, metadata });
+module.exports = Object.assign({}, { colorMode, navbar, footer, prism, algolia, metadata });
