@@ -10,22 +10,8 @@ const sidebars = {
       items: [
         {
           type: 'category',
-          label: 'Object',
-          link: {
-            type: 'generated-index',
-            title: 'Object',
-            description: `
-            JavaScript 에서 object 는 property 의 집합이라고 볼 수 있습니다. Property 는 key 와 value 로 구성되어있으며, value 는 어떤 타입이든 담을 수 있습니다.
-            Object 섹션에선 JavaScript 에서 object 와 관련하여 가진 특성들을 기술하도록 하겠습니다.
-            `,
-            slug: '/javascript/object',
-            keywords: ['object', 'javascript'],
-          },
-          items: ['javascript/object/attributes-of-object-property-in-js'],
-        },
-        {
-          type: 'category',
           label: 'Module System',
+          collapsed: true,
           link: {
             type: 'generated-index',
             title: 'Module System',
@@ -38,13 +24,40 @@ const sidebars = {
           },
           items: ['javascript/module/before-es6', 'javascript/module/features', 'javascript/module/syntax'],
         },
+        {
+          type: 'category',
+          label: 'Standard Built-In Objects',
+          collapsed: true,
+          link: {
+            type: 'generated-index',
+            title: 'Standard Built-In Objects',
+            description: `
+            JavaScript 에선 내장되어 있는 유용한 객체와 그와 관련된 속성, 메서드가 정말 많습니다.
+            이 섹션은 이를 가볍게 정리하며 사용하며 겪었던 경험이 있다면 함께 기술하려 합니다.
+            `,
+            slug: '/javascript/standard-built-in-objects',
+            keywords: ['Javascript', 'Standard Built-In Objects', 'Object'],
+          },
+          items: [
+            {
+              type: 'category',
+              label: 'Object',
+              link: {
+                type: 'generated-index',
+                title: 'Object',
+                description: `
+              JavaScript 에서 object 는 property 의 집합이라고 볼 수 있습니다. Property 는 key 와 value 로 구성되어있으며, value 는 어떤 타입이든 담을 수 있습니다.
+              Object 섹션에선 JavaScript 에서 object 와 관련하여 가진 특성들을 기술하도록 하겠습니다.
+              `,
+                slug: '/javascript/standard-built-in-objects/object',
+                keywords: ['Javascript', 'Object'],
+              },
+              items: ['javascript/standard-built-in-objects/Object/attributes-of-object-property-in-js'],
+            },
+          ],
+        },
       ],
     },
-    // {
-    //   type: 'category',
-    //   label: 'React',
-    //   items: ['react/suspense'],
-    // },
   ],
 };
 
