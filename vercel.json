@@ -1,4 +1,7 @@
 {
   "redirects": [{ "source": "/", "destination": "/blog" }],
-  "trailingSlash": true
+  "rewrites": [
+    { "source": "/blog", "destination": "/" },
+    { "source": "/blog/:match*", "destination": "/:match*" }
+  ]
 }

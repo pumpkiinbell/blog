@@ -1,0 +1,138 @@
+---
+title: ES6 이전의 Module System
+description: '1995년 JS 의 등장과 2015년, ES6 의 등장으로 모듈 시스템이 JS 의 표준이 되기까지 약 20년간 자바스크립트에서 모듈화 프로그래밍을 위한 많은 시도가 있었습니다. 이 문서에선 이 과정속에 어떤 일들이 있었는지 간단하게 기술하도록 하겠습니다.'
+keywords: ['Module', 'DIY Module', 'CommonJS', 'AMD', 'ES6']
+---
+
+1995년 JS 의 등장과 2015년, ES6 의 등장으로 모듈 시스템이 JS 의 표준이 되기까지 약 20년간 자바스크립트에서 모듈화 프로그래밍을 위한 많은 시도가 있었습니다.
+이 문서에선 이 과정속에 어떤 일들이 있었는지 간단하게 기술하도록 하겠습니다.
+
+## Pre Modules
+
+> _1990년대 중반 ~ 2000년대 초반_
+
+초창기 자바스크립트는 가벼운 기능을 위해 만들어진 언어였습니다.
+그러나 웹의 인기와 함께 자바스크립트의 인기도 급상승 하였고, 점점 사람들은 JavaScript 로 다양한 시도들을 하게 되었습니다.
+앱의 규모가 커질 수록 스크립트 파일들을 분리할 필요가 생겼고, 작성된 외부 스크립트 파일들을 가져오는 과정에서 문제가 발생했습니다.
+
+외부 스크립트 파일들이 하나의 전역 공간으로 가져와지며 같은 이름을 가진 식별자들이 충돌하는 상황이 발생한 것이었습니다.
+또, 전역 공간에 노출된 식별자들이 의도치 않게 다른 로직에 영향을 주기도 하였습니다.
+이런 문제를 해결하기 위해 각 파일을 구획화하는, 모듈화가 필요하게 되었습니다.
+
+## DIY Module
+
+> _2000년대 초 ~ 중반_
+
+모듈은 코드의 block 이라고 할 수 있습니다. 모듈 프로그래밍은 여러 모듈들을 가져와 하나의 기능을 수행하도록 합니다.
+그러기에 모듈은 재사용성을 할 수 있어야 합니다. 재사용성을 위해선 다음과 같은 특징이 필요합니다.
+
+- 모듈 내부에서 작성된 데이터, 혹은 함수를 외부에 노출할 수 있어야 합니다. 그렇지 않은 데이터는 외부에 노출되지 않아야 합니다.
+- 모듈을 다른 모듈에서 가져올 수 (import) 있어야 합니다.
+- 여러 모듈에서 import 되더라도 초기 상태를 유지해야 합니다.
+
+`IIFE 와 클로저` 의 특성으로 변수의 전역 공간으로서의 노출을 막을 수 있었습니다.
+
+```js
+var module = {};
+function require(fileName) {
+  return module[fileName] == null ? undefined : module[fileName];
+}
+
+module['counter.js'] = (function () {
+  var count = 0;
+
+  function addCount() {
+    count = count + 1;
+  }
+
+  function minusCount() {
+    count = count - 1;
+  }
+
+  function getCount() {
+    return count;
+  }
+
+  return {
+    addCount,
+    minusCount,
+    getCount,
+  };
+})();
+
+var counter = require('counter.js');
+counter.addCount();
+counter.addCount();
+counter.minusCount();
+console.log(counter.getCount()); // 1
+```
+
+이와 같은 방식은 전역 공간으로 식별자가 노출되는 상황은 막을 수 있었습니다.
+그러나, 다른 모듈에서 `counter.js` 가 여러 번 필요하게 되는 경우 처음 상태를 유지하지 못하는 문제가 있었고 이 때문에 확장성에 제약을 받게 되었습니다.
+
+## Specification
+
+> _2009년 ~_
+
+2009년 8월, Kevin Dangoor 를 주축으로 하여 `CommonJS` 가 등장합니다.
+드디어 모듈 시스템이 일종의 우회책이 아닌, 제대로 된 명세를 가지고 등장하게 되었습니다.
+아래는 각 모듈 시스템의 특징을 짧게 기술합니다.
+
+### CommonJS
+
+CommonJS 모듈은 서버와 동기적으로 파일들을 모듈을 가져오는 목적으로 디자인 되었습니다.
+Node 에서 파일들은 파일 시스템에 존재하므로, 웹에서 네트워크를 통해 가져오게 되는 파일에 비해 비교적 빠르게 파일들을 가져올 수 있습니다. 이 때문에 현재까지도 Node.js 진영에서 자주 사용하는 모듈 시스템입니다.
+
+CommonJS 는 아래와 같은 특징을 지니게 되었습니다.
+
+- 하나의 파일은 하나의 모듈을 지닐 수 있습니다.
+- 동기적으로 파일들을 가져오는 특성 상 정적 분석이 가능합니다.
+- [순환 의존성을 지원합니다.](https://blog.outsider.ne.kr/1283)
+
+### Asynchronous Module Definition (AMD)
+
+브라우저 진영에서 자주 사용하던 모듈 시스템입니다.
+CommonJS 모듈은 비동기를 지원하지 않았습니다. 이와 같은 특성은 비교적 느린 네트워크 환경에 있는 브라우저 환경에서는 적합하지 않았습니다. AMD format 은 브라우저 호환성을 위해 이 문제를 해결하고자 하였습니다.
+
+AMD format 은 다음과 같은 특징을 가집니다.
+
+- 여러 개의 모듈을 하나의 파일로 만들어줍니다.
+- 동적으로 모듈을 가져올 수 있습니다.
+
+```js
+var MyModule = require("MyModule");
+
+// module
+define(["dependencies", ...], function(){
+    return MyModule;
+})
+
+// import 할 때
+require(["dependencies", ...], function(MyModules, ...){
+    // do stuff here
+});
+```
+
+## Standardization
+
+> 2015년 ~
+
+CommonJS, AMD 는 분명 초기에 비해 확장성있는 모듈을 만드는데 큰 도움을 주었습니다.
+그러나 저마다의 이유로 각자의 명세대로 작성되어 있었기 때문에 AMD 로 작성된 모듈은 CommonJS 에서 사용할 수 없었습니다.
+UMD 라는 CJS 와 AMD 를 동시에 지원하기 위한 시도가 등장하였지만, 사용하기에 너무 번거로웠습니다.
+
+이에 각 체계의 장점을 모두 지원하는 표준화가 필요하게 되었습니다.
+이에 ES6 의 모듈 시스템은 다음과 같은 주요 특징을 가지게 되었습니다.
+
+- CommonJS 와 유사하게, 모듈 간의 순환 참조를 지원합니다.
+- AMD 와 유사하게, 비동기 module import 를 지원합니다.
+- 정적 모듈 구조를 가집니다.
+- UMD 에 비해 문법 구조가 단순합니다.
+
+각 특징은 다음 문서에서 기술하겠습니다.
+
+## Further Readings
+
+- [JavaScript Modules Past & Presents](https://www.youtube.com/watch?v=GQ96b_u7rGc&t=2325s)
+- [Exploring ES6](https://exploringjs.com/es6/ch_modules.html#static-module-structure)
+- [Why AMD](https://requirejs.org/docs/whyamd.html)

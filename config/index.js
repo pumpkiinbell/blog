@@ -8,11 +8,10 @@ const themeConfig = require('./theme');
  * @type {import('@docusaurus/types').Config}
  */
 const config = {
-  title: 'pumpkinbell',
+  title: 'Blog by pumpkiinbell',
   url: 'https://www.pumpkiinbell.com',
   baseUrl: '/',
   favicon: '/img/meta/favicon.ico',
-  trailingSlash: false,
   i18n,
   noIndex: false,
   onBrokenLinks: 'warn',
@@ -24,15 +23,12 @@ const config = {
   themeConfig,
   plugins: ['docusaurus-plugin-sass'],
   themes: [],
-  presets: [
-    ['classic', presets.classic],
-    ['@docusaurus/plugin-client-redirects', presets.redirects],
-  ],
+  presets: [['classic', presets.classic]],
   staticDirectories: ['static'],
   scripts: [],
   stylesheets: [],
   clientModules: [],
-  titleDelimiter: '|',
+  titleDelimiter: ' | ',
   baseUrlIssueBanner: false,
 };
 

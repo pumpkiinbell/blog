@@ -1,0 +1,145 @@
+---
+title: ES6 Module 의 Syntax
+description: '해당 문서에선 ES6 모듈의 문법인 `export, import`,
+그리고 `type="module"`을 붙인 스크립트와 그렇지 않은 스크립트의 차이점에 대해서 알아봅니다.'
+keywords: ['Module', 'export', 'import', 'type="module"']
+---
+
+해당 문서에선 ES6 모듈의 문법인 `export, import`, 그리고 `type="module"`을 붙인 스크립트와 그렇지 않은 스크립트의 차이점에 대해서 알아봅니다.
+
+## export
+
+`export` 되는 모듈은 항상 `strict mode` 입니다.
+
+`export` 구문은 `type='module'` 이 없는 embedded script 에서는 사용할 수 없습니다.
+
+`export` 는 다음 두 가지 스타일의 방식이 있습니다.
+
+- Named Exports (하나의 모듈에 0 ~ N 개의 대상을 내보낼 수 있습니다.)
+- Default Exports (하나의 모듈에 1개의 대상만 내보낼 수 있습니다.)
+
+**_named exports_**
+
+named exports 는 모듈 내에 여러 번 사용할 수 있으며, `var, let, const, function, class` 를 export 할 수 있습니다. exports 는 top-level 에 있는 한 어느 위치에서든 사용할 수 있습니다.
+
+```js
+// 선언 이전에 export 할 수 있습니다.
+export { myFunction, myVariable };
+
+export let myVariable = Math.sqrt(2);
+export function myFunction() {
+  /* ... */
+}
+
+// 선언 이후에도 가능합니다.
+// export { myFunction, myVariable };
+```
+
+**_default exports_**
+
+default exports 는 모듈 내에 단 한번만 사용할 수 있습니다.
+
+여러 번 사용하면 이전에 `default` 로 지정한 대상은 덮어씌워집니다.
+
+```js
+export default function () { /* ... */ }
+export default class { .. } // 이전 대상을 덮어씌웁니다.
+```
+
+**_'as' alias_**
+
+as 를 사용하면 기존 식별자 대신 다른 별칭으로 대상을 export 할 수 있습니다.
+
+```js
+export { myFunction as function1, myVariable as variable };
+```
+
+as alias 로 default 를 내보낼 수도 있습니다. 아래 두 구문은 같은 default export 입니다.
+
+```js
+export { myFunction as default };
+export default myFunction;
+```
+
+**_Re-exporting / Aggregating_**
+
+다른 모듈에서 export 한 대상을 가져와 다시 export 하거나, 합쳐서 export 할 수 있습니다.
+
+예를 들어, math 라는 폴더 아래에 add, divide 라는 모듈이 있다고 가정해봅시다.
+
+```js
+~/math
+ㄴ add.js
+ㄴ divide.js
+ㄴ index.js
+```
+
+`index.js` 에 각 모듈을 가져와 다시 export 해줌으로써 하나의 경로로 import 되게 할 수 있습니다.
+
+```js
+// index.js
+
+import { default as add } from './add.js';
+import { default as divide } from './divide.js';
+
+export { add, divide };
+```
+
+## import
+
+`export` 와 마찬가지로 import 되는 대상은 항상 `strict mode` 에 있습니다.
+
+`import` 구문은 `type='module'` 이 없는 embedded script 에서는 사용할 수 없습니다.
+
+만약, 해당 속성이 없는 embedded script 에서 module 을 import 해야 하는 경우, `import()` 사용을 고려할 수 있습니다.
+
+ES6 에서 import 는 `read-only view` 입니다. 즉, 해당 값을 수정할 수 없으며 오직 read 할 수만 있습니다.
+
+```js
+export let counter = 3;
+export function add() {
+  counter++;
+}
+
+//------ main.js ------
+import { counter, add } from './module';
+
+console.log(counter); // 3
+add();
+console.log(counter); // 4
+
+// import 된 대상은 수정할 수 없습니다.
+counter++; // TypeError
+```
+
+ES6 에서 모듈은 singleton 이므로, 여러 번 import 하더라도 하나의 instance 만 존재합니다.
+
+즉, 위의 예시 처럼 `counter` 를 변경한다 하더라도 `another.js` 에서 import 하는 경우 다른 counter 를 가지게 됩니다.
+
+**_single, multiple importing_**
+
+```js
+import { myExport } from '/modules/my-module.js';
+import { foo, bar } from '/modules/my-module.js';
+```
+
+## `<script> vs <script type='module'>`
+
+ES6 로 파일을 모듈 방식으로 불러오려면 `<script type='module'>` 과 같이 작성해야 합니다.
+
+이 방식을 취하면 `<script>` 와 아래와 같은 차이를 보입니다.
+
+- strict mode
+  - 후자는 `use strict ` 같은 구문의 존재 여부와 관계 없이 `strict mode` 에 존재하게 됩니다.
+- 변수 범위
+  - 전자는 top-level 에 있는 변수들이 `global` 객체에 존재하게 됩니다. 후자는 모듈 공간에서의 top-level 로 존재하며 export 하지 않으면 다른 모듈에서 참조할 수 없습니다.
+- 실행 방식
+  - 전자는 대상 파일을 동기적으로 실행합니다. 후자는 비동기적으로 실행합니다. 이 때문에 import 하는 대상의 load 여부를 염두하지 않고 코드를 작성할 수 있습니다.
+- import, export 구문 사용 가능 여부
+  - 전자는 `import` 구문을 사용할 수 없습니다. 어떤 파일을 읽어오려면 `import()` 를 사용해야 합니다.
+
+## Further Readings
+
+- [Exploring ES6](https://exploringjs.com/es6/ch_modules.html#static-module-structure)
+- [MDN - import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)
+- [MDN - export](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export)
