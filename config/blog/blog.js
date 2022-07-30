@@ -9,6 +9,7 @@ const blog = {
     type: 'all',
     copyright: '@ 박종호, All rights reserved',
   },
+  blogSidebarCount: 'ALL',
 };
 
 module.exports = blog;
