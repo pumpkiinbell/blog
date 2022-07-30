@@ -1,0 +1,147 @@
+---
+date: 2022-07-30T21:42
+authors: pumpkiinbell
+title: 'exhaustiveness checking'
+description: '`exhaustiveness check` 를 할 경우, 예상치 못한 런타임 에러를 미연에 방지할 수 있습니다.'
+keywords: ['typescript', 'exhaustiveness check']
+tags:
+  - typescript
+  - exhaustiveness check
+---
+
+`exhaustiveness check` 를 할 경우, 예상치 못한 런타임 에러를 미연에 방지할 수 있게 됩니다.
+
+<!--truncate-->
+
+## 시작
+
+`exhaustiveness` 는 `철저함, 완전함` 이라는 뜻을 가지고 있습니다.
+즉, `exhaustiveness checking` 은 모든 케이스에 대해 완전하게 검사한다는 의미를 가집니다.
+어떤 대상을 완전하게 검사한다는 것일까요?
+
+```ts title=types.ts
+export type Animal = '개' | '고양이' | '토끼';
+```
+
+```ts title=touchAnimal.ts
+import { Animal } from './types';
+
+const touchAnimal = (target: Animal) => {
+  switch (target) {
+    case '개':
+      return '개를 쓰다듬자...';
+    case '고양이':
+      return '고양이를 쓰다듬자...';
+    case '토끼':
+      return '토끼를 쓰다듬자...';
+    default:
+      throw new Error('동물을 쓰다듬을 수 없어요...');
+  }
+};
+```
+
+위 코드를 예로 들어 봅시다. `Animal` 이라는 타입을 정의하였고 각 Union 타입마다 특정한 값을 반환합니다.
+딱히 문제가 있어 보이는 코드는 아닙니다. 하지만, 만약 `Animal` 이 갖는 타입이 변할 수 있다면 어떨까요?
+
+```diff title=types.ts
+- export type Animal = '개' | '고양이' | '토끼';
++ export type Animal = '개' | '고양이' | '토끼' | '호랑이';
+```
+
+`호랑이` 라는 값이 Animal 타입에 추가되었습니다.
+이러한 경우, `호랑이` 라는 값에 대한 분기문 처리가 되어있지 않으므로 Error 가 throw 될 것입니다.
+
+**문제는, 해당 에러를 Compile Time 에서 잡을 수 없다는 점입니다!!**
+
+우리가 TypeScript 를 사용하는 목적은
+Compile Time 에서 Type Checking 을 하여 RunTime 에서 발생할 수 있는 오류를 미연에 방지하는 것인데,
+위 케이스에서는 이러한 목적을 달성하기 어렵습니다.
+
+## Exhaustiveness Checking
+
+위와 같은 문제를 `Exhaustiveness Checking` 으로 해결할 수 있습니다.
+
+서두에도 말했다시피, `Exhaustiveness` 는 완전함, 철저함 이라는 뜻을 가집니다.
+
+```ts
+// types.ts
+
+export type Animal = '개' | '고양이' | '토끼' | '호랑이';
+
+// touchAnimal.ts
+
+import { Animal } from './types';
+
+const touchAnimal = (target: Animal) => {
+  switch (target) {
+    case '개':
+      return '개를 쓰다듬자...';
+    case '고양이':
+      return '고양이를 쓰다듬자...';
+    case '토끼':
+      return '토끼를 쓰다듬자...';
+    default:
+      exhaustiveCheck(target); // ERROR!!
+    // Argument of type 'string' is not assignable to parameter of type 'never'.
+  }
+};
+
+const exhaustiveCheck = (param: never) => {
+  throw new Error('동물을 쓰다듬을 수 없어요...');
+};
+```
+
+이전과는 달리, `default` 에서 `exhaustiveCheck` 함수를 호출합니다.
+
+exhaustiveCheck 는 인자로 **never** 타입을 갖는데요, never 타입은 never 타입을 제외한 어떤 타입도 할당할 수 없습니다.
+그렇기 때문에 target 이 **never** 타입이 아닌 타입으로 추론될 경우 TypeScript 에서 Error 메시지를 출력합니다.
+
+이를 해결하려면 **철저하게 (exhaustive)** 모든 케이스에 대해 분기 처리 해줘야 합니다.
+
+```ts
+type Animal = '개' | '고양이' | '토끼' | '호랑이';
+
+const touchAnimal = (target: Animal) => {
+  switch (target) {
+    case '개':
+      return '개를 쓰다듬자...';
+    case '고양이':
+      return '고양이를 쓰다듬자...';
+    case '토끼':
+      return '토끼를 쓰다듬자...';
+    case '호랑이':
+      return '호랑이를 만나면 도망가자...';
+    default:
+      exhaustiveCheck(target); // OK!!
+  }
+};
+
+const exhaustiveCheck = (param: never): never => {
+  throw new Error('동물을 쓰다듬을 수 없어요...');
+};
+```
+
+exhaustiveCheck 의 형태는 어떤 형태이든 상관없습니다.
+`default` 로 들어오는 값을 `never` 타입에 할당 가능한지 체크해주면 됩니다.
+예를 들어, 아래와 같이 명시적으로 never 타입을 선언할 수도 있습니다.
+
+```ts
+type Animal = '개' | '고양이' | '토끼' | '호랑이';
+
+const touchAnimal = (target: Animal) => {
+  switch (target) {
+    case '개':
+      return '개를 쓰다듬자...';
+    case '고양이':
+      return '고양이를 쓰다듬자...';
+    case '토끼':
+      return '토끼를 쓰다듬자...';
+    default:
+      const _target: never = target; // ERROR!!
+  }
+};
+```
+
+`exhaustiveness check` 를 할 경우, 위와 같은 예상치 못한 런타임 에러를 미연에 방지할 수 있게 됩니다.
+[eslint](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/docs/rules/switch-exhaustiveness-check.md)
+에서 이런 Rule 을 강제할 수도 있으니, 프로젝트 세팅 시에 참고하면 좋을 것 같습니다.
