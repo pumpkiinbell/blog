@@ -1,0 +1,189 @@
+---
+date: 2022-08-07T21:42
+authors: pumpkiinbell
+title: 'Bivariance hack for consistent unsoundness with RefObject'
+description: '`@types/react/index.d.ts` 에서 Ref 의 타입 정의를 보면 Bivariance hack for consistent unsoundness with RefObject 란 주석이 있습니다.
+이 문장이 뜻하는 바에 대해 알아봅시다.'
+keywords: ['TypeScript', 'React', 'useRef', 'RefCallback', 'RefObject', '@types/react', 'Bivariance hack for consistent unsoundness with RefObject', 'bivarianceHack']
+tags:
+  - TypeScript
+  - React
+---
+
+`@types/react/index.d.ts` 에서 Ref 의 타입 정의를 보면 **Bivariance hack for consistent unsoundness with RefObject** 란 주석이 있습니다.
+이 문장이 뜻하는 바에 대해 알아봅시다.
+
+<!--truncate-->
+
+## 시작
+
+`@types/react/index.d.ts` 에서 Ref 의 타입 정의를 보다 보면 [다음](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts#L84-L86)과 같이 정의되어 있습니다.
+
+```ts
+// Bivariance hack for consistent unsoundness with RefObject
+type RefCallback<T> = { bivarianceHack(instance: T | null): void }['bivarianceHack'];
+type Ref<T> = RefCallback<T> | RefObject<T> | null;
+```
+
+이 주석을 글자 그대로 해석해보면 다음과 같습니다.
+
+> **_RefObject 와의 일관성있는 불건전함을 위한 이면성 속임수 (bivariance hack)_**
+
+언뜻 보면 이해하기 어려운 문장입니다.
+
+- 불건전함 (unsoundness) 이 뭘까요?
+- `RefObject 와의 일관성 있는 불건전함`이 무엇을 뜻하는 것일까요?
+- Bivariance hack 은 무엇이고, 일관성있는 불건전함을 위해 왜 Bivariance hack 을 한다는 것일까요?
+
+이번 글을 읽고 나면 이 질문들에 대한 해소가 될 것이며 RefCallback 에 왜 저런 주석을 남겼는지 이해할 수 있을 것이라 생각합니다.
+
+:::note
+하단 섹션에서는 Covariance(공변성), Contravariance(반공변성), Bivariance(이변성) 와 관련한 내용을 다룹니다.
+
+관련하여 이현섭님의 [정말 좋은 글](https://seob.dev/posts/%EA%B3%B5%EB%B3%80%EC%84%B1%EC%9D%B4%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80)이 있으니,
+우선적으로 읽어주시면 더 빠른 이해가 될 것입니다. [링크](https://seob.dev/posts/%EA%B3%B5%EB%B3%80%EC%84%B1%EC%9D%B4%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80)
+:::
+
+## RefCallback
+
+리액트에서 DOM 의 reference 를 얻고자 할 때 보통 아래와 같이 `useRef` 를 호출할 것입니다.
+`useRef` 를 호출하는 경우, current 란 이름의 필드를 가진 `RefObject` 를 반환합니다.
+
+```tsx
+const inputRef = useRef<HTMLInputElement>(null); // { current: HTMLInputElement | null }
+
+<input ref={inputRef} />;
+```
+
+그러나, Ref 는 [Callback 함수](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) 도 받을 수 있습니다.
+
+```tsx
+const inputRefCallback = (instance: HTMLInputElement) => {
+  instance.focus();
+};
+
+<input ref={inputRefCallback} />;
+```
+
+React 는 컴포넌트가 마운트 될 때 DOM 의 ref 속성으로 함수를 받는 경우, DOM Element 를 인자로 담아 Callback 함수를 호출합니다.
+이후, **Unmount 되는 시점엔 인자로 `null` 을 담아 callback 함수를 요청**합니다.
+
+## Unsoundness
+
+타입스크립트의 타입 시스템에선 특정 동작에 한하여 Compile-Time 에 안전한지 파악하기 어려운 동작들을 [허용해줍니다.](https://www.typescriptlang.org/docs/handbook/type-compatibility.html#a-note-on-soundness)
+
+만약, 특정 사용자의 타입 시스템에서 이 속성이 포함되는 경우 건전한 타입 체계를 가지지 않았다(unsound)고 하며
+이 `unsound` 한 동작은 신중히 다뤄져야 합니다.
+
+## bivarianceHack
+
+앞서 다음과 같은 코드를 언급했는데요.
+
+```tsx
+const inputRefCallback = (instance: HTMLInputElement) => {
+  instance.focus();
+};
+
+<input ref={inputRefCallback} />;
+```
+
+만약, [strictFunctionTypes](https://www.typescriptlang.org/tsconfig#strictFunctionTypes) 가 체크되어 있는 상황에서
+@types/react 의 `RefCallback` 을 다음과 같이 수정하면 에러가 납니다.
+
+```diff
+- type RefCallback<T> = { bivarianceHack(instance: T | null): void }["bivarianceHack"];
++ type RefCallback<T> = (instance: T | null) => void;
+```
+
+```tsx
+// highlight-start
+const inputRefCallback = (instance: HTMLInputElement) => {
+  instance.focus();
+};
+// highlight-end
+
+// ERROR!!
+// Type '(instance: HTMLInputElement) => void' is not assignable to type 'Ref<HTMLInputElement> | undefined'
+// ...
+<input ref={inputRefCallback} />;
+```
+
+앞서 첨부한 [글](https://seob.dev/posts/%EA%B3%B5%EB%B3%80%EC%84%B1%EC%9D%B4%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80)을 읽으셨다면,
+TypeScript 는 method shorthand 방식은 이변적으로 동작한다는 점을 확인하셨을 것입니다.
+이는 일종의 이변성을 위한 속임수(bivariance hack) 이며, 이 정의를 arrow function 으로 수정하면 반공변적으로 동작하기 때문에 에러가 표출되는 것입니다.
+
+사실 null 을 타이핑해야 하는 것이 건전한 타이핑입니다.
+앞서 RefCallback 섹션에서 언급했듯, `<input>` 이 unmount 되는 경우 RefCallback 은 인자로 null 을 받게 되며
+위의 코드는 null 에 있는 focus 메서드를 호출할 시도를 하게 되므로 `TypeError` 를 뱉게 됩니다.
+
+instance 가 null 이 들어올 수 있다는 점을 염두하고 `instance?.focus()` 를 호출해야 안전합니다.
+
+```tsx
+// highlight-start
+const inputRefCallback = (instance: HTMLInputElement | null) => {
+  instance?.focus();
+};
+// highlight-end
+
+<input ref={inputRefCallback} />;
+```
+
+그렇다면 왜 `@types/react` 는 이런 불건전한 타이핑을 남겨두었을까요?
+
+## 개선 시도
+
+분명 이런 타이핑을 허용하는 것은 `sound` 하지 않았기 때문에
+`@types/react` 의 17.0.42 버전에선 RefCallback 을 화살표 함수로 타이핑을 하는 [시도](https://github.com/DefinitelyTyped/DefinitelyTyped/pull/58936)가 있었습니다.
+
+그러나, 다시 현재처럼 method shorthand 형태로 돌아왔는데요. 이는 아래와 같은 배경이 있었습니다.
+
+**_RefObject 의 unsoundness_**
+
+```tsx
+declare const ref: { current: HTMLInputElement };
+
+<input ref={ref} />; // OK
+```
+
+`{ current: HTMLInputElement }` 는 input 의 `ref` 에 할당해도 아무 문제가 없습니다.
+
+당연합니다. Ref 는 RefObject 타입을 가질 수 있고, RefObject 는 다음과 같은 타입을 가졌거든요.
+
+```tsx
+interface RefObject<T> {
+  readonly current: T | null;
+}
+
+type Ref<T> = RefCallback<T> | RefObject<T> | null;
+```
+
+HTMLInputElement 가 HTMLInputElement | null 의 부분집합이므로,
+공변적으로 `{ current: HTMLInputElement }` 는 `RefObject<HTMLInputElement>` 의 부분집합입니다.
+
+그러나 ref 는 unmount 될 때 current 에 null 을 할당하므로, `{ current: HTMLInputElement }` 는 `sound` 한 타이핑이 아닙니다.
+그렇기에 `RefObject` 가 사용되는 곳은 null 이 타이핑되지 않았다면 `unsound` 할 수 밖에 없습니다.
+
+**_consistent unsoundness_**
+
+RefCallback 의 타입은 revert 가 되었고, 해당 코드를 수정한 분은 [이런 코멘트를 남겼습니다.](https://github.com/mui/material-ui/pull/31894#issuecomment-1075356797)
+
+> **_The current ref callback behavior is correct but ref objects are still unsound so let's prefer the consistent unsoundness over inconsistent soundness._**
+
+RefObject 는 unsound 하므로 RefCallback 을 sound 하게 만듦으로써 일관성을 해치는 것보다는
+현재 상태를 유지하되 일관성을 유지하는 것이 낫다는 것입니다.
+
+따라서 아래와 같은 주석이 생겼음을 알 수 있습니다.
+
+```ts
+// Bivariance hack for consistent unsoundness with RefObject
+type RefCallback<T> = { bivarianceHack(instance: T | null): void }['bivarianceHack'];
+```
+
+## 정리
+
+정리하자면, DOM 이나 컴포넌트를 참조하기 위해 RefCallback 이나 RefObject 을 쓰게 되는 경우엔
+null 을 타이핑하지 않아도 Compile-Time 에 문제가 생기진 않습니다.
+
+그러나 이는 **불건전한(unsound) 상황**입니다.
+참조하는 컴포넌트가 unmount 되는 경우 callback 함수의 인자로 `null` 이 들어올 수 있고
+이는 RunTime Error 를 발생시킬 수 있다는 점을 유념하여 코드를 작성하는 것이 더 안전합니다.
