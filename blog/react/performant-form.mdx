@@ -1,0 +1,180 @@
+---
+date: 2022-12-15T14:32
+authors: pumpkiinbell
+title: '재렌더링 비용이 적은  만들기'
+description: '일반 리액트 폼과 `Context API`, `Jotai`, `React Hook Form` 을 사용한 Form 컴포넌트를 비교하며 `re-render` 비용이 적은 폼 컴포넌트를 만들어 봅니다.'
+keywords:
+  [
+    'React',
+    'Component',
+    'TypeScript',
+    'form',
+    'React Form',
+    'jotai form',
+    'react hook form',
+    'state management library',
+    'atomic state management',
+    'react htmlattributes',
+    'react componentpropswithoutref',
+    'react componentprops',
+    'react componentpropswithref',
+    'react reactnode',
+    'react jsx element',
+    'react reactelement',
+    'render props',
+  ]
+tags:
+  - React
+  - TypeScript
+---
+
+일반 리액트 폼과 `Context API`, `Jotai`, `React Hook Form` 을 사용한 Form 컴포넌트를 비교하며 `re-render` 비용이 적은 폼 컴포넌트를 만들어 봅니다.
+
+<!--truncate-->
+
+## 목차
+
+- [Introduction](#Introduction)
+- [단순한(naive) 폼 컴포넌트](#단순한naive-폼-컴포넌트)
+- 개선 컴포넌트 1. Context API
+- 개선 컴포넌트 2. Jotai
+- 개선 컴포넌트 3. React Hook Form
+
+## Introduction
+
+React 를 사용하는 FE 개발자라면,
+상태의 변화에 따라 일어나는 컴포넌트의 `re-render` 비용을 줄이려 노력해본 경험이 있을 것입니다.
+
+컴포넌트의 `re-render` 비용을 줄이면 함수나 객체 레퍼런스를 매번 새로 만들어야 할 필요도 없고,
+ㅇ의도하지 않은 동작도 방지할 수 있으니깐요!
+
+FrontEnd 개발자라면 사용자의 입력을 받아 서버로 요청하는 `<form>` 태그를 많이 사용할 것입니다.
+[advanced web ranking 의 조사](https://www.advancedwebranking.com/seo/html-study/)에 따르면
+전 세계의 페이지의 57.3% 가 `<form>` 태그를 사용하고 있다고 합니다.
+
+<img
+  src="https://www.advancedwebranking.com/seo/wp-content/uploads/2021/11/elements.png"
+  alt="elements"
+  style={{ marginBottom: '20px' }}
+/>
+
+이렇게 많이 사용하는 `<form>` 태그의 re-render 횟수를 줄일 수 있다면,
+컴포넌트 성능을 향상시킬 수 있으면 좋지 않을까요?
+
+이렇게 많이 사용하는 `<form>` 태그의 re-render 횟수를 줄임으로써 컴포넌트 성능을 향상시킬 수 있으면 좋지 않을까요?
+
+이번 글에선 다양한 방식으로 `<form>` 태그의 re-render 횟수를 줄임으로써 앱의 성능을 향상시킬 수 있는 방법을 알아봅니다.
+
+## 단순한(naive) 폼 컴포넌트
+
+사용자에게 email 과 password 를 받는 아래와 같은 폼을 예시로 들어볼까요?
+
+(`re-render` 되는 컴포넌트가 하이라이팅 되도록 하였습니다.)
+
+<iframe
+  src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?autoresize=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2FBasicForm%2FBasicForm.tsx&initialpath=%2Fbasic&theme=dark"
+  width="100%"
+  height="450"
+  title="jotai form reference with RR"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+  style={{ marginBottom: '10px' }}
+/>{' '}
+
+<details>
+<summary><b>위 폼 요소의 코드는 다음과 같습니다. (클릭)</b></summary>
+
+```tsx
+import React, { useState } from 'react';
+
+import Form from '../components/Form';
+import Input from '../components/Input';
+
+type FormState = {
+  email: string;
+  password: string;
+};
+
+export default function BasicForm() {
+  const [formState, setFormState] = useState<FormState>({
+    email: '',
+    password: '',
+  });
+
+  return (
+    <Form
+      onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        console.debug(formState);
+      }}
+    >
+      <h1>Basic Form</h1>
+
+      <Input
+        type="text"
+        placeholder="email"
+        value={formState.email}
+        onChange={(event) => {
+          setFormState((prevState) => ({
+            ...prevState,
+            email: event.target.value,
+          }));
+        }}
+      />
+
+      <Input
+        type="password"
+        placeholder="password"
+        value={formState.password}
+        onChange={(event) => {
+          setFormState((prevState) => ({
+            ...prevState,
+            password: event.target.value,
+          }));
+        }}
+      />
+
+      <button type="submit">Submit</button>
+    </Form>
+  );
+}
+```
+
+</details>
+
+입력란에 값을 입력해보면, 이메일만 값을 입력했는데 비밀번호란, 폼 전체가 `re-render` 됩니다.
+
+사용자가 `<Input type=’email’ />` 인 요소에 값을 입력하면 setFormState 를 호출하고, 다음과 같은 일이 일어납니다.
+
+---
+
+_**`<Form />`**_
+
+- `formState` 가 업데이트됩니다.
+- state 가 변경되었으므로 re-render 됩니다.
+
+_**`<Input type='email’ >`**_
+
+- `formState.email` 이 변하며 `value` prop 이 업데이트됩니다.
+- `onChange` prop 에 전달되는 함수 레퍼런스가 새롭게 만들어집니다.
+- prop 이 변경되었으므로 re-render 됩니다.
+
+_**`<Input type=’password’ >`**_
+
+- `onChange` prop 에 전달되는 함수 레퍼런스가 새롭게 만들어집니다.
+- prop 이 변경되었으므로 re-render 됩니다.
+
+---
+
+생각해보면, email 필드를 타이핑하면 password 필드는 값이 그대로입니다.
+
+굳이 re-render 가 일어날 필요가 없습니다! password 필드의 re-render 를 일으키지 않을 좋은 방법이 없을까요?
+
+## 개선 컴포넌트 1. Context API
+
+위 컴포넌트에서
+
+```tsx
+
+```
