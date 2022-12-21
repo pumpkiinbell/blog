@@ -1,7 +1,7 @@
 ---
 date: 2022-12-15T14:32
 authors: pumpkiinbell
-title: '재렌더링 비용이 적은  만들기'
+title: '재렌더링 비용이 적은 폼 컴포넌트 만들기'
 description: '일반 리액트 폼과 `Context API`, `Jotai`, `React Hook Form` 을 사용한 Form 컴포넌트를 비교하며 `re-render` 비용이 적은 폼 컴포넌트를 만들어 봅니다.'
 keywords:
   [
@@ -26,6 +26,9 @@ keywords:
 tags:
   - React
   - TypeScript
+  - Jotai
+  - React Hook Form
+  - Context API
 ---
 
 일반 리액트 폼과 `Context API`, `Jotai`, `React Hook Form` 을 사용한 Form 컴포넌트를 비교하며 `re-render` 비용이 적은 폼 컴포넌트를 만들어 봅니다.
@@ -37,7 +40,7 @@ tags:
 - [Introduction](#Introduction)
 - [단순한(naive) 폼 컴포넌트](#단순한naive-폼-컴포넌트)
 - [개선된 컴포넌트 1. Context API](#개선된-컴포넌트-1-context-api)
-- 개선 컴포넌트 2. Jotai
+- [개선된 컴포넌트 2. Jotai](#개선된-컴포넌트-2-jotai)
 - 개선 컴포넌트 3. React Hook Form
 
 ## Introduction
@@ -190,7 +193,7 @@ password 필드의 re-render 를 일으키지 않을 좋은 방법이 없을까�
   <b>위 폼 요소의 코드는 다음과 같습니다. (클릭)</b>
 </summary>
 
-코드량이 다소 많아 CodeSandbox 에서 보시는 것을 추천합니다. [링크](https://codesandbox.io/s/jotai-form-reference-with-rr-qfxcfn?from-embed=&initialpath=/basic&file=/src/BasicFormWithContext/BasicFormWithContext.tsx)
+코드량이 많아 CodeSandbox 에서 보시는 것을 추천합니다. [링크](https://codesandbox.io/s/jotai-form-reference-with-rr-qfxcfn?from-embed=&initialpath=/with-context&file=/src/BasicFormWithContext/BasicFormWithContext.tsx)
 
 ```tsx title="BasicFormWithContext.tsx"
 import { FieldProvider } from './context/field';
@@ -490,3 +493,264 @@ FormProvider 가 state 가 변경될 때마다 re-render 되더라도 prop 에�
 children prop 으로 넘겨받은 ReactNode 는 re-render 를 일으키지 않습니다.
 
 ### 의문점
+
+생각해보면, `<Form>` 도 굳이 re-render 를 일으킬 필요가 없지 않을까요?
+
+입력할 때마다 폼 컴포넌트 UI 가 바뀐 건 아니니깐 말입니다.
+그렇다면, `<Form>` 도 re-render 를 일으키지 않을 방법이 있을까요?
+
+## 개선된 컴포넌트 2. Jotai
+
+위 폼을 [Jotai](https://jotai.org/) 를 사용하여 개선하였습니다. ([recoil](https://recoiljs.org/) 을 사용해도 괜찮습니다.)
+
+타이핑을 해보면, 아까와는 달리 `<Form>` 이 re-render 되지 않습니다.
+
+<!-- {/* <iframe
+  src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?fontsize=14&hidenavigation=1&initialpath=%2Fjotai&module=%2Fsrc%2FJotaiForm%2FJotaiForm.tsx&theme=dark"
+  width="100%"
+  height="450"
+  title="jotai form reference with RR"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+/> */} !-->
+
+<details>
+<summary>
+  <b>위 폼 요소의 코드는 다음과 같습니다. (클릭)</b>
+</summary>
+
+코드량이 많아 CodeSandbox 에서 보시는 것을 추천합니다. [링크](https://codesandbox.io/s/jotai-form-reference-with-rr-qfxcfn?from-embed=&initialpath=/jotai&file=/src/JotaiForm/JotaiForm.tsx)
+
+```tsx title="JotaiForm.tsx"
+import { FormProvider } from './context/form';
+
+import EmailInput from './EmailInput';
+import PasswordInput from './PasswordInput';
+
+export default function JotaiForm() {
+  return (
+    <FormProvider>
+      <h1>Jotai Form</h1>
+
+      <EmailInput />
+
+      <PasswordInput />
+
+      <button type="submit">Submit</button>
+    </FormProvider>
+  );
+}
+```
+
+```tsx title="context/form.tsx"
+import { atom, PrimitiveAtom, useAtom } from 'jotai';
+import { useAtomCallback } from 'jotai/utils';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import Form from '../../components/Form';
+
+type FormState = {
+  email: PrimitiveAtom<string>;
+  password: PrimitiveAtom<string>;
+};
+
+const FormStateContext = createContext<FormState | null>(null);
+
+export function FormProvider({ children }: { children: React.ReactNode }) {
+  const formState = useMemo(() => ({ email: atom(''), password: atom('') }), []);
+
+  const payloadAtom = useMemo(() => {
+    return atom((get) => {
+      return Object.fromEntries(
+        Object.entries(formState).map(([key, value]) => {
+          return [key, get(value)];
+        }),
+      );
+    });
+  }, [formState]);
+
+  const handleSubmit = useAtomCallback(
+    useCallback(
+      (get, _, event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const payload = get(payloadAtom);
+
+        console.debug(payload);
+      },
+      [payloadAtom],
+    ),
+  );
+
+  return (
+    <FormStateContext.Provider value={formState}>
+      <Form onSubmit={handleSubmit}>{children}</Form>
+    </FormStateContext.Provider>
+  );
+}
+
+export function useFormFieldState(name: keyof FormState) {
+  const context = useContext(FormStateContext);
+
+  if (context == null) {
+    throw new Error(`Cannot find <FormStateContext.Provider>`);
+  }
+
+  return useAtom(context[name]);
+}
+```
+
+```tsx title="EmailInput.tsx"
+import Input from '../components/Input';
+import { useFormFieldState } from './context/form';
+
+export default function EmailInput() {
+  const [value, setFormState] = useFormFieldState('email');
+
+  return (
+    <Input
+      type="text"
+      placeholder="email"
+      value={value}
+      onChange={(event) => {
+        setFormState(event.target.value);
+      }}
+    />
+  );
+}
+```
+
+```tsx title="PasswordInput.tsx"
+import Input from '../components/Input';
+import { useFormFieldState } from './context/form';
+
+export default function PasswordInput() {
+  const [value, setFormState] = useFormFieldState('password');
+
+  return (
+    <Input
+      type="password"
+      placeholder="password"
+      value={value}
+      onChange={(event) => {
+        setFormState(event.target.value);
+      }}
+    />
+  );
+}
+```
+
+</details>
+
+이 글은 Jotai 에 대한 자세한 설명은 하지 않을 것이지만,
+원활한 이해를 위해 가벼운 설명을 하자면 아래와 같습니다.
+
+- [atom](https://jotai.org/docs/api/core#atom) function 을 호출하여 state 를 얻을 수 있는 atom 을 생성할 수 있습니다.
+- atom 은 state 가 update 되더라도 re-render 를 일으키지 않습니다.
+- useAtom(atom), useAtomValue(atom) 같은 훅을 사용하면, state 를 얻을 수 있으며
+  해당 훅을 호출한 컴포넌트는 re-render 됩니다.
+
+### 개선 포인트 1. Context API + Jotai
+
+이전과 동일하게 Context API 를 사용하고, value 로 jotai atom 을 주입할 것입니다.
+
+```tsx title="context/form.tsx"
+export function FormProvider({ children }: { children: React.ReactNode }) {
+  const formState = { email: atom(''), password: atom('') };
+
+  const payloadAtom = useMemo(() => {
+    return atom((get) => {
+      return Object.fromEntries(
+        Object.entries(formState).map(([key, value]) => {
+          return [key, get(value)];
+        }),
+      );
+    });
+  }, [formState]);
+
+  return (
+    <FormStateContext.Provider value={formState}>
+      <Form onSubmit={handleSubmit}>{children}</Form>
+    </FormStateContext.Provider>
+  );
+}
+```
+
+formState 에서 각 필드마다 atom 을 생성해줍니다.
+해당 atom 들은 각 필드에서 Context 를 통해 넘겨 받아 각자의 atom 을 업데이트 할 것입니다.
+
+`payloadAtom` 은 [derived atom](https://jotai.org/docs/guides/composing-atoms#basic-derived-atoms) 입니다.
+formState 에서 property value 로 갖고 있는 atom 들을 기반으로 만들어진 atom 이며,
+각 필드에서 atom 을 업데이트 하면 `payloadAtom` 과 매핑된 state 도 업데이트 됩니다.
+그러나, re-render 를 일으키지 않습니다.
+
+또한, payloadAtom 이 오로직 formState 의 atom 으로부터 update 될 수 있도록 하기 위해
+`write` function 이 없는 `read-only atom` 으로 만듭니다.
+
+```tsx title="PasswordInput.tsx"
+import Input from '../components/Input';
+import { useFormFieldState } from './context/form';
+
+export default function PasswordInput() {
+  const [value, setFormState] = useFormFieldState('password');
+
+  return (
+    <Input
+      type="password"
+      placeholder="password"
+      value={value}
+      onChange={(event) => {
+        setFormState(event.target.value);
+      }}
+    />
+  );
+}
+
+// context/form.tsx
+
+export function useFormFieldState(name: keyof FormState) {
+  const context = useContext(FormStateContext);
+
+  if (context == null) {
+    throw new Error(`Cannot find <FormStateContext.Provider>`);
+  }
+
+  return useAtom(context[name]);
+}
+```
+
+각 Form 필드 컴포넌트는 `useContext` 를 호출하여 formState 를 얻고,
+이를 name 으로 인덱싱하여 자신이 업데이트 해야 할 atom 을 얻습니다.
+그리고 이를 useAtom 을 호출하여 값과 업데이트 함수를 얻습니다.
+
+### 개선 포인트 2. useAtomCallback
+
+위와 같이 작성한들, submit 을 위해 useAtom(payloadAtom) 을 호출하면
+payloadAtom 이 매핑된 상태가 업데이트 될 때마다 FormProvider 는 re-render 가 될 것이고,
+Form 태그는 부모인 FormProvider 에 의해 re-render 를 일으킬 것입니다.
+
+이를 [useAtomCallback](https://jotai.org/docs/utils/use-atom-callback) 을 사용하여 해결할 수 있습니다.
+
+useAtomCallback 은 callback 함수를 받아
+**해당 함수가 atom 을 구독하지 않고**
+상태를 asynchronous 하게 읽을 수 있습니다.
+
+```tsx title="context/form.tsx"
+// ...
+const handleSubmit = useAtomCallback(
+  useCallback(
+    (get, _, event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      const payload = get(payloadAtom);
+
+      console.debug(payload);
+    },
+    [payloadAtom],
+  ),
+);
+
+// ...
+```
+
+위와 같이 작성하면, payloadAtom 이 업데이트 되어도
+이를 구독하지 않으므로 re-render 를 일으키지 않으며 동시에 payloadAtom 값으로 다루어 절차를 처리할 수 있는 함수를 작성할 수 있습니다.
