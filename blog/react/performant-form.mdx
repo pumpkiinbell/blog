@@ -46,6 +46,8 @@ Form 을 개발하며 왜 모든 요소에 `re-render` 가 일어나야 하는�
 - [개선된 컴포넌트 2. Jotai](#개선된-컴포넌트-2-jotai)
 - [개선된 컴포넌트 3. React Hook Form](#개선된-컴포넌트-3-react-hook-form)
 
+<br />
+
 ## Introduction
 
 React 를 사용하는 FE 개발자라면,
@@ -57,10 +59,12 @@ React 를 사용하는 FE 개발자라면,
 흔히들 폼을 만들면서 후자와 같은 상황을 마주쳤을텐데요.
 폼 요소가 적을 땐 큰 문제가 되지 않지만,
 복잡한 폼이나 규모가 큰 웹 애플리케이션을 구현해야 할 경우엔
-최적화를 고려할 필요가 있습니다.
+다양한 이유로 최적화를 고려할 필요가 있습니다.
 
 이번 글에선 `re-render` 가 일어나는 이유와 이를 해결할 수 있는 다양한 방식을 설명하고,
 폼 요소들의 `re-render` 를 줄임으로써 앱의 성능을 향상시킬 수 있는 방법을 알아봅니다.
+
+<br />
 
 ## 단순한(naive) 폼 컴포넌트
 
@@ -140,11 +144,11 @@ export default function BasicForm() {
 
 </details>
 
+<br />
+
 입력란에 값을 입력해보면, 이메일만 값을 입력했는데 비밀번호란, 폼 전체가 `re-render` 됩니다.
 
-사용자가 `<Input type=’email’ />` 인 요소에 값을 입력하면 setFormState 를 호출하고, 다음과 같은 일이 일어납니다.
-
----
+사용자가 `<Input type=’email’ />` 인 요소에 값을 입력하면 setFormState 를 호출하고, 아래와 같은 일이 일어납니다.
 
 _**`<Form />`**_
 
@@ -158,18 +162,18 @@ _**`<Input type=’password’ >`**_
 
 - 부모 컴포넌트인 `<Form />` 이 re-render 되므로, 함께 re-render 됩니다.
 
----
-
 ### 의문점
 
 생각해보면, email 필드를 타이핑 할 때는 password 필드의 값은 그대로이므로 굳이 re-render 가 일어날 필요가 없습니다.
 password 필드의 re-render 를 일으키지 않을 좋은 방법이 없을까요?
 
+<br />
+
 ## 개선된 컴포넌트 1. Context API
 
 위 폼을 [Context API](https://reactjs.org/docs/context.html) 를 사용해서 아래와 같이 개선하였습니다.
 
-타이핑을 해보면, 아까와는 달리 한 필드가 다른 필드의 re-render 를 일으키지 않습니다!
+타이핑을 해보면, 아까와는 달리 한 필드가 다른 필드의 re-render 를 일으키지 않습니다.
 
 <iframe
   src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?fontsize=14&hidenavigation=1&initialpath=%2Fwith-context&module=%2Fsrc%2FBasicFormWithContext%2FBasicFormWithContext.tsx&theme=dark"
@@ -346,13 +350,15 @@ export default function PasswordInput() {
 Context API 를 사용하면 Provider 의 value 가 변경될 때,
 이를 사용하는 컴포넌트가 re-render 가 됩니다.
 
-이 점을 활용해볼까요?
-
-email 과 password 의 state 를 분리하여 Provider 를 만들면,
+이 점을 활용해서 email 과 password 의 state 를 분리하여 Provider 를 만들면,
 email value 가 업데이트 될 땐 password value 를 Context 로 사용하는 컴포넌트는
 re-render 가 되지 않을 것 같습니다!
 
-코드로 함께 보시죠.
+함께 코드로 볼까요?
+
+<br />
+
+#### _FormProvider_
 
 ```tsx title="context/form.tsx"
 export function FormProvider({ children }: { children: React.ReactNode }) {
@@ -384,7 +390,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
 
 왜 굳이 분리해서 Provider 를 만들었을까요?
 
-`<Context.Provider value={{ state, setState }}>` 처럼 함께 넘긴다고 생각해보죠.
+`<Context.Provider value={{ state, setState }}>` 처럼 함께 넘긴다고 생각해볼까요.
 
 email 필드가 업데이트 될 때 password 필드는 값이 바뀌지 않지만, 업데이트는 해야하므로 `setState` 가 필요합니다.
 이를 `state` 와 함께 value 에 넘기면 state 가 업데이트 될 때마다 reference 가 변경되게 됩니다.
@@ -392,6 +398,8 @@ email 필드가 업데이트 될 때 password 필드는 값이 바뀌지 않지�
 즉, setState 만 필요함에도 re-render 를 일으키게 됩니다.
 
 <br />
+
+#### _FieldProvider_
 
 ```tsx title="context/field.tsx"
 export function FieldProvider({ name, children }: { name: keyof FormState; children: React.ReactNode }) {
@@ -412,12 +420,16 @@ function useFormStateContext() {
 }
 ```
 
-이제 `context/field.tsx` 를 보겠습니다.
+이제 `context/field.tsx` 의 `FieldProvider` 를 보겠습니다.
 
-FormProvider 에서 `FormStateContext.Provider` 를 통해 주입해주는 값을 가져옵니다.
-이후, name prop 으로 인덱싱한 값을 `FieldValueContext.Provider` 로 주입합니다.
+FieldProvider 는 FormProvider 에서 useContext 로 `FormStateContext.Provider` 를 통해 주입해주는 값을 가져옵니다.
+
+이 중, Provider 로 제공할 값을 `name` prop 으로 인덱싱하여 `FieldValueContext.Provider` 로 주입하면
+FieldValueContext 를 구독하는 쪽에선 `name` prop 과 관련 없는 요소는 업데이트 되도 `re-render` 가 일어나지 않을 것입니다!
 
 <br />
+
+#### _PasswordInput_
 
 ```tsx title="PasswordInput.tsx"
 import Input from '../components/Input';
@@ -456,6 +468,8 @@ export function useFieldContext() {
 
 PasswordInput 은 FieldValueContext 를 통해 fieldValue 를 얻고,
 SetFormStateContext 을 통해 주입된 setFieldValue 를 얻습니다.
+
+<br />
 
 ### 개선 포인트 2. children 을 prop 으로 받아 렌더링 범위 줄이기
 
@@ -497,6 +511,8 @@ children prop 으로 넘겨받은 ReactNode 는 re-render 를 일으키지 않�
 생각해보면, `<Form>` 도 굳이 re-render 를 일으킬 필요가 없지 않을까요? 입력할 때마다 폼 컴포넌트 UI 가 바뀐 건 아니니깐 말입니다.
 
 `<Form>` 도 re-render 를 일으키지 않을 방법이 있을까요?
+
+<br />
 
 ## 개선된 컴포넌트 2. Jotai
 
@@ -648,6 +664,8 @@ export default function PasswordInput() {
 - useAtom(atom), useAtomValue(atom) 같은 훅을 사용하면, state 를 얻을 수 있으며
   해당 훅을 호출한 컴포넌트는 re-render 됩니다.
 
+<br />
+
 ### 개선 포인트 1. Context API + Jotai
 
 이전과 동일하게 Context API 를 사용하고, value 로 jotai atom 을 주입할 것입니다.
@@ -682,7 +700,7 @@ formState 에서 property value 로 갖고 있는 atom 들을 기반으로 만�
 각 필드에서 atom 을 업데이트 하면 `payloadAtom` 과 매핑된 state 도 업데이트 됩니다.
 그러나, re-render 를 일으키지 않습니다.
 
-또한, payloadAtom 이 오로직 formState 의 atom 으로부터 update 될 수 있도록 하기 위해
+또한, payloadAtom 이 오로지 formState 의 atom 으로부터 update 될 수 있도록 하기 위해
 `write` function 이 없는 `read-only atom` 으로 만듭니다.
 
 ```tsx title="PasswordInput.tsx"
@@ -721,13 +739,15 @@ export function useFormFieldState(name: keyof FormState) {
 이를 name 으로 인덱싱하여 자신이 업데이트 해야 할 atom 을 얻습니다.
 그리고 이를 useAtom 을 호출하여 값과 업데이트 함수를 얻습니다.
 
+<br />
+
 ### 개선 포인트 2. useAtomCallback
 
-위와 같이 작성한들, submit 을 위해 useAtom(payloadAtom) 을 호출하면
+위와 같이 작성한들, submit 을 위해 `useAtom(payloadAtom)` 을 호출하면
 payloadAtom 이 매핑된 상태가 업데이트 될 때마다 FormProvider 는 re-render 가 될 것이고,
 Form 태그는 부모인 FormProvider 에 의해 re-render 를 일으킬 것입니다.
 
-이를 [useAtomCallback](https://jotai.org/docs/utils/use-atom-callback) 을 사용하여 해결할 수 있습니다.
+이 점은 [useAtomCallback](https://jotai.org/docs/utils/use-atom-callback) 을 사용하여 해결할 수 있습니다.
 
 useAtomCallback 은 callback 함수를 받아
 **해당 함수가 atom 을 구독하지 않고**
@@ -754,15 +774,17 @@ const handleSubmit = useAtomCallback(
 위와 같이 작성하면, payloadAtom 이 업데이트 되어도
 이를 구독하지 않으므로 re-render 를 일으키지 않으며 동시에 payloadAtom 값으로 다루어 절차를 처리할 수 있는 함수를 작성할 수 있습니다.
 
+<br />
+
 ## 개선된 컴포넌트 3. React Hook Form
 
 위 폼을 [Uncontrolled Component](https://reactjs.org/docs/uncontrolled-components.html) 로 작성할 수도 있습니다!
 
-Uncontrolled Component 는 form data 를 React component 에서 다루는 것이 아닌,
+Uncontrolled Component 는 form data 를 리액트 컴포넌트에서 다루는 것이 아닌,
 DOM 에 내장된 데이터를 이용해 다루게 됩니다.
 
-Uncontrolled Component 를 그냥 사용하기엔 부차적인 작업들이 여러 필요해서,
-[React Hook Form](https://react-hook-form.com/) 이라는 라이브러리의 도움을 받아 폼을 작성해보도록 하겠습니다.
+Uncontrolled Component 를 그냥 `useRef` 등으로 사용하기엔 여러 부차적인 작업들이 필요해서,
+[React Hook Form](https://react-hook-form.com/) 이라는 라이브러리의 도움을 받아 작성해보도록 하겠습니다.
 
 <iframe
   src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?fontsize=14&hidenavigation=1&initialpath=%2Freact-hook-form&module=%2Fsrc%2FRHFForm%2FRHFForm.tsx&theme=dark"
@@ -824,9 +846,12 @@ React Hook Form 에서 제공해주는 [Controller](https://react-hook-form.com/
 
 이후 [handleSubmit](https://react-hook-form.com/api/useform/handlesubmit) 을 활용해 submit 이벤트에 대응할 수 있습니다.
 
+<br />
+
 ## 정리
 
 사실 React 는 이미 Virtual DOM 과 같은 내장 기술을 활용해 최적화를 하고 있으므로,
 소규모 앱에선 이를 크게 신경 쓸 필요는 없다고 생각합니다.
 
-그러나, re-render 가 일어나는 사유와 이를 해결할 수 있는 다양한 방안을 알면 다양한 케이스에 활용할 수 있습니다.
+그러나 잦은 `re-render` 로 인해 유저 반응성 저해나 Side Effect 로 고민을 하고 계신다면,
+언급한 다양한 기술을 활용해 이를 해소 할 수 있다고 생각합니다.
