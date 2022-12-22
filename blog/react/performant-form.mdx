@@ -9,19 +9,12 @@ keywords:
     'Component',
     'TypeScript',
     'form',
-    'React Form',
-    'jotai form',
-    'react hook form',
-    'state management library',
-    'atomic state management',
-    'react htmlattributes',
-    'react componentpropswithoutref',
-    'react componentprops',
-    'react componentpropswithref',
-    'react reactnode',
-    'react jsx element',
-    'react reactelement',
-    'render props',
+    'Jotai',
+    'React Hook Form',
+    'Controlled Form',
+    'Controlled Component',
+    'Uncontrolled Form',
+    'Uncontrolled Component',
   ]
 tags:
   - React
@@ -386,9 +379,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
 
 최상단에 위치할 FormProvider 입니다.
 
-**주목해야 할 점은, `FormStateContext` 와 `SetFormStateContext` 가 분리되어 있다는 점입니다.**
-
-왜 굳이 분리해서 Provider 를 만들었을까요?
+**주목해야 할 점은, `FormStateContext` 와 `SetFormStateContext` 가 분리되어 있다는 점입니다.** 왜 굳이 분리해서 Provider 를 만들었을까요?
 
 `<Context.Provider value={{ state, setState }}>` 처럼 함께 넘긴다고 생각해볼까요.
 
@@ -508,7 +499,7 @@ children prop 으로 넘겨받은 ReactNode 는 re-render 를 일으키지 않�
 
 ### 의문점
 
-생각해보면, `<Form>` 도 굳이 re-render 를 일으킬 필요가 없지 않을까요? 입력할 때마다 폼 컴포넌트 UI 가 바뀐 건 아니니깐 말입니다.
+생각해보면, `<Form>` 도 굳이 re-render 를 일으킬 필요가 없지 않을까요? 입력할 때마다 폼 컴포넌트 UI 가 바뀐 건 아니니깐 말이예요.
 
 `<Form>` 도 re-render 를 일으키지 않을 방법이 있을까요?
 
@@ -853,5 +844,5 @@ React Hook Form 에서 제공해주는 [Controller](https://react-hook-form.com/
 사실 React 는 이미 Virtual DOM 과 같은 내장 기술을 활용해 최적화를 하고 있으므로,
 소규모 앱에선 이를 크게 신경 쓸 필요는 없다고 생각합니다.
 
-그러나 잦은 `re-render` 로 인해 유저 반응성 저해나 Side Effect 로 고민을 하고 계신다면,
+그러나 잦은 `re-render` 로 인한 유저 반응성 저해나 Side Effect 로 고민을 하고 계신다면,
 언급한 다양한 기술을 활용해 이를 해소 할 수 있다고 생각합니다.
