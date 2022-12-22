@@ -1,0 +1,848 @@
+---
+date: 2022-12-22T18:32
+authors: pumpkiinbell
+title: '재렌더링 비용이 적은 폼 컴포넌트 만들기'
+description: '단순한 리액트 폼 컴포넌트와 `Context API`, `Jotai`, `React Hook Form` 을 사용한 컴포넌트를 비교하며 `re-render` 비용이 적은 폼 컴포넌트를 만들어 봅니다.'
+keywords:
+  [
+    'React',
+    'Component',
+    'TypeScript',
+    'form',
+    'Jotai',
+    'React Hook Form',
+    'Controlled Form',
+    'Controlled Component',
+    'Uncontrolled Form',
+    'Uncontrolled Component',
+  ]
+tags:
+  - React
+  - TypeScript
+  - Jotai
+  - React Hook Form
+  - Context API
+---
+
+Form 을 개발하며 왜 모든 요소에 `re-render` 가 일어나야 하는지 고민해 본 경험이 있나요?
+
+이 글에선 단순한 리액트 폼 컴포넌트와 `Context API`, `Jotai`, `React Hook Form` 을 사용한 컴포넌트를 비교하며
+`re-render` 비용이 적은 폼 컴포넌트를 만들어 봅니다.
+
+<!--truncate-->
+
+## 목차
+
+- [Introduction](#Introduction)
+- [단순한(naive) 폼 컴포넌트](#단순한naive-폼-컴포넌트)
+- [개선된 컴포넌트 1. Context API](#개선된-컴포넌트-1-context-api)
+- [개선된 컴포넌트 2. Jotai](#개선된-컴포넌트-2-jotai)
+- [개선된 컴포넌트 3. React Hook Form](#개선된-컴포넌트-3-react-hook-form)
+
+<br />
+
+## Introduction
+
+React 를 사용하는 FE 개발자라면,
+상태의 변화에 따라 불필요하게 일어나는 컴포넌트의 `re-render` 를 방지하려 노력해 본 경험이 있을 것입니다.
+
+실제로 해당 컴포넌트가 갖고 있는 상태가 변해 필수적으로 업데이트를 해줘야 하는 component 가 있는 반면,
+설계 상의 이유로 UI 가 변하지 않음에도 불필요한 re-render 가 일어나는 경우도 있기 때문입니다.
+
+흔히들 폼을 만들면서 후자와 같은 상황을 마주쳤을텐데요.
+폼 요소가 적을 땐 큰 문제가 되지 않지만,
+복잡한 폼이나 규모가 큰 웹 애플리케이션을 구현해야 할 경우엔
+다양한 이유로 최적화를 고려할 필요가 있습니다.
+
+이번 글에선 `re-render` 가 일어나는 이유와 이를 해결할 수 있는 다양한 방식을 설명하고,
+폼 요소들의 `re-render` 를 줄임으로써 앱의 성능을 향상시킬 수 있는 방법을 알아봅니다.
+
+<br />
+
+## 단순한(naive) 폼 컴포넌트
+
+사용자에게 email 과 password 를 받는 아래와 같은 폼을 예시로 들어볼까요? 한번 값을 입력해보세요!
+
+(`re-render` 되는 컴포넌트가 하이라이팅 되도록 하였습니다.)
+
+<iframe
+  src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?autoresize=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2FBasicForm%2FBasicForm.tsx&initialpath=%2Fbasic&theme=dark"
+  width="100%"
+  height="450"
+  title="jotai form reference with RR"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+  style={{ marginBottom: '10px' }}
+/>
+
+<details>
+<summary><b>위 폼 요소의 코드는 다음과 같습니다. (클릭)</b></summary>
+
+```tsx
+import React, { useState } from 'react';
+
+import Form from '../components/Form';
+import Input from '../components/Input';
+
+type FormState = {
+  email: string;
+  password: string;
+};
+
+export default function BasicForm() {
+  const [formState, setFormState] = useState<FormState>({
+    email: '',
+    password: '',
+  });
+
+  return (
+    <Form
+      onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        console.debug(formState);
+      }}
+    >
+      <h1>Basic Form</h1>
+
+      <Input
+        type="text"
+        placeholder="email"
+        value={formState.email}
+        onChange={(event) => {
+          setFormState((prevState) => ({
+            ...prevState,
+            email: event.target.value,
+          }));
+        }}
+      />
+
+      <Input
+        type="password"
+        placeholder="password"
+        value={formState.password}
+        onChange={(event) => {
+          setFormState((prevState) => ({
+            ...prevState,
+            password: event.target.value,
+          }));
+        }}
+      />
+
+      <button type="submit">Submit</button>
+    </Form>
+  );
+}
+```
+
+</details>
+
+<br />
+
+입력란에 값을 입력해보면, 이메일만 값을 입력했는데 비밀번호란, 폼 전체가 `re-render` 됩니다.
+
+사용자가 `<Input type=’email’ />` 인 요소에 값을 입력하면 setFormState 를 호출하고, 아래와 같은 일이 일어납니다.
+
+_**`<Form />`**_
+
+- `formState` 가 업데이트됩니다. state 가 변경되었으므로 re-render 됩니다.
+
+_**`<Input type='email’ >`**_
+
+- 부모 컴포넌트인 `<Form />` 이 re-render 되므로, 함께 re-render 됩니다.
+
+_**`<Input type=’password’ >`**_
+
+- 부모 컴포넌트인 `<Form />` 이 re-render 되므로, 함께 re-render 됩니다.
+
+### 의문점
+
+생각해보면, email 필드를 타이핑 할 때는 password 필드의 값은 그대로이므로 굳이 re-render 가 일어날 필요가 없습니다.
+password 필드의 re-render 를 일으키지 않을 좋은 방법이 없을까요?
+
+<br />
+
+## 개선된 컴포넌트 1. Context API
+
+위 폼을 [Context API](https://reactjs.org/docs/context.html) 를 사용해서 아래와 같이 개선하였습니다.
+
+타이핑을 해보면, 아까와는 달리 한 필드가 다른 필드의 re-render 를 일으키지 않습니다.
+
+<iframe
+  src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?fontsize=14&hidenavigation=1&initialpath=%2Fwith-context&module=%2Fsrc%2FBasicFormWithContext%2FBasicFormWithContext.tsx&theme=dark"
+  width="100%"
+  height="450"
+  title="jotai form reference with RR"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+  style={{ marginBottom: '10px' }}
+/>
+
+<details>
+<summary>
+  <b>위 폼 요소의 코드는 다음과 같습니다. (클릭)</b>
+</summary>
+
+코드량이 많아 CodeSandbox 에서 보시는 것을 추천합니다. [링크](https://codesandbox.io/s/jotai-form-reference-with-rr-qfxcfn?from-embed=&initialpath=/with-context&file=/src/BasicFormWithContext/BasicFormWithContext.tsx)
+
+```tsx title="BasicFormWithContext.tsx"
+import { FieldProvider } from './context/field';
+import { FormProvider } from './context/form';
+import EmailInput from './EmailInput';
+
+import PasswordInput from './PasswordInput';
+
+export default function BasicFormWithContext() {
+  return (
+    <FormProvider>
+      <h1>Basic Form With Context</h1>
+
+      <FieldProvider name="email">
+        <EmailInput />
+      </FieldProvider>
+
+      <FieldProvider name="password">
+        <PasswordInput />
+      </FieldProvider>
+
+      <button type="submit">Submit</button>
+    </FormProvider>
+  );
+}
+```
+
+```tsx title="context/form.tsx"
+import React, { createContext, useContext, useState } from 'react';
+import Form from '../../components/Form';
+
+export type FormState = {
+  email: string;
+  password: string;
+};
+
+const FormStateContext = createContext<FormState | null>(null);
+const SetFormStateContext = createContext<React.Dispatch<React.SetStateAction<FormState>> | null>(null);
+
+export function FormProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<FormState>({
+    email: '',
+    password: '',
+  });
+
+  return (
+    <FormStateContext.Provider value={state}>
+      <SetFormStateContext.Provider value={setState}>
+        <Form
+          onSubmit={(event) => {
+            event.preventDefault();
+            console.debug(state);
+          }}
+        >
+          {children}
+        </Form>
+      </SetFormStateContext.Provider>
+    </FormStateContext.Provider>
+  );
+}
+
+export function useFormStateContext() {
+  const context = useContext(FormStateContext);
+
+  if (context == null) {
+    throw new Error(`Cannot find <FormStateContext.Provider>`);
+  }
+
+  return context;
+}
+
+export function useSetFormStateContext() {
+  const context = useContext(SetFormStateContext);
+
+  if (context == null) {
+    throw new Error(`Cannot find <SetFormStateContext.Provider>`);
+  }
+
+  return context;
+}
+```
+
+```tsx title="context/field.tsx"
+import React, { createContext, useContext } from 'react';
+import { FormState, useFormStateContext, useSetFormStateContext } from './form';
+
+const FieldValueContext = createContext<string | null>(null);
+
+export function FieldProvider({ name, children }: { name: keyof FormState; children: React.ReactNode }) {
+  const formState = useFormStateContext();
+
+  return <FieldValueContext.Provider value={formState[name]}>{children}</FieldValueContext.Provider>;
+}
+
+export function useFieldContext() {
+  const fieldValue = useContext(FieldValueContext);
+  const setFieldValue = useSetFormStateContext();
+
+  if (fieldValue == null) {
+    throw new Error(`Cannot find <FieldValueContext.Provider>`);
+  }
+
+  return [fieldValue, setFieldValue] as const;
+}
+```
+
+```tsx title="EmailInput.tsx"
+import Input from '../components/Input';
+import { useFieldContext } from './context/field';
+
+export default function EmailInput() {
+  const [value, setValue] = useFieldContext();
+
+  return (
+    <Input
+      type="text"
+      placeholder="email"
+      value={value}
+      onChange={(event) => {
+        setValue((prevState) => ({
+          ...prevState,
+          email: event.target.value,
+        }));
+      }}
+    />
+  );
+}
+```
+
+```tsx title="PasswordInput.tsx"
+import Input from '../components/Input';
+import { useFieldContext } from './context/field';
+
+export default function PasswordInput() {
+  const [value, setValue] = useFieldContext();
+
+  return (
+    <Input
+      type="password"
+      placeholder="password"
+      value={value}
+      onChange={(event) => {
+        setValue((prevState) => ({
+          ...prevState,
+          password: event.target.value,
+        }));
+      }}
+    />
+  );
+}
+```
+
+</details>
+
+### 개선 포인트 1. Context API 로 렌더링 범위 줄이기
+
+Context API 를 사용하면 Provider 의 value 가 변경될 때,
+이를 사용하는 컴포넌트가 re-render 가 됩니다.
+
+이 점을 활용해서 email 과 password 의 state 를 분리하여 Provider 를 만들면,
+email value 가 업데이트 될 땐 password value 를 Context 로 사용하는 컴포넌트는
+re-render 가 되지 않을 것 같습니다!
+
+함께 코드로 볼까요?
+
+<br />
+
+#### _FormProvider_
+
+```tsx title="context/form.tsx"
+export function FormProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<FormState>({
+    email: '',
+    password: '',
+  });
+
+  return (
+    <FormStateContext.Provider value={state}>
+      <SetFormStateContext.Provider value={setState}>
+        <Form
+          onSubmit={(event) => {
+            event.preventDefault();
+            console.debug(state);
+          }}
+        >
+          {children}
+        </Form>
+      </SetFormStateContext.Provider>
+    </FormStateContext.Provider>
+  );
+}
+```
+
+최상단에 위치할 FormProvider 입니다.
+
+**주목해야 할 점은, `FormStateContext` 와 `SetFormStateContext` 가 분리되어 있다는 점입니다.** 왜 굳이 분리해서 Provider 를 만들었을까요?
+
+`<Context.Provider value={{ state, setState }}>` 처럼 함께 넘긴다고 생각해볼까요.
+
+email 필드가 업데이트 될 때 password 필드는 값이 바뀌지 않지만, 업데이트는 해야하므로 `setState` 가 필요합니다.
+이를 `state` 와 함께 value 에 넘기면 state 가 업데이트 될 때마다 reference 가 변경되게 됩니다.
+
+즉, setState 만 필요함에도 re-render 를 일으키게 됩니다.
+
+<br />
+
+#### _FieldProvider_
+
+```tsx title="context/field.tsx"
+export function FieldProvider({ name, children }: { name: keyof FormState; children: React.ReactNode }) {
+  const formState = useFormStateContext();
+
+  return <FieldValueContext.Provider value={formState[name]}>{children}</FieldValueContext.Provider>;
+}
+
+// context/form.tsx
+function useFormStateContext() {
+  const context = useContext(FormStateContext);
+
+  if (context == null) {
+    throw new Error(`Cannot find <FormStateContext.Provider>`);
+  }
+
+  return context;
+}
+```
+
+이제 `context/field.tsx` 의 `FieldProvider` 를 보겠습니다.
+
+FieldProvider 는 FormProvider 에서 useContext 로 `FormStateContext.Provider` 를 통해 주입해주는 값을 가져옵니다.
+
+이 중, Provider 로 제공할 값을 `name` prop 으로 인덱싱하여 `FieldValueContext.Provider` 로 주입하면
+FieldValueContext 를 구독하는 쪽에선 `name` prop 과 관련 없는 요소는 업데이트 되도 `re-render` 가 일어나지 않을 것입니다!
+
+<br />
+
+#### _PasswordInput_
+
+```tsx title="PasswordInput.tsx"
+import Input from '../components/Input';
+import { useFieldContext } from './context/field';
+
+export default function PasswordInput() {
+  const [value, setValue] = useFieldContext();
+
+  return (
+    <Input
+      type="password"
+      placeholder="password"
+      value={value}
+      onChange={(event) => {
+        setValue((prevState) => ({
+          ...prevState,
+          password: event.target.value,
+        }));
+      }}
+    />
+  );
+}
+
+// context/field.tsx
+export function useFieldContext() {
+  const fieldValue = useContext(FieldValueContext);
+  const setFieldValue = useSetFormStateContext();
+
+  if (fieldValue == null) {
+    throw new Error(`Cannot find <FieldValueContext.Provider>`);
+  }
+
+  return [fieldValue, setFieldValue] as const;
+}
+```
+
+PasswordInput 은 FieldValueContext 를 통해 fieldValue 를 얻고,
+SetFormStateContext 을 통해 주입된 setFieldValue 를 얻습니다.
+
+<br />
+
+### 개선 포인트 2. children 을 prop 으로 받아 렌더링 범위 줄이기
+
+Context API 를 사용하더라도 부모 컴포넌트가 re-render 된다면 하위 컴포넌트는 re-render 됩니다.
+
+**이는 children prop 으로 해결할 수 있습니다.**
+
+```tsx
+export function FormProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<FormState>({
+    email: '',
+    password: '',
+  });
+
+  return (
+    <FormStateContext.Provider value={state}>
+      <SetFormStateContext.Provider value={setState}>
+        <Form
+          onSubmit={(event) => {
+            event.preventDefault();
+            console.debug(state);
+          }}
+        >
+          {children}
+        </Form>
+      </SetFormStateContext.Provider>
+    </FormStateContext.Provider>
+  );
+}
+```
+
+FormProvider 나 FieldProvider 는 children 으로 ReactNode 를 받고 있는데요.
+
+FormProvider 가 state 가 변경될 때마다 re-render 되더라도 prop 에는 영향을 끼치지 않기 때문에,
+children prop 으로 넘겨받은 ReactNode 는 re-render 를 일으키지 않습니다.
+
+### 의문점
+
+생각해보면, `<Form>` 도 굳이 re-render 를 일으킬 필요가 없지 않을까요? 입력할 때마다 폼 컴포넌트 UI 가 바뀐 건 아니니깐 말이예요.
+
+`<Form>` 도 re-render 를 일으키지 않을 방법이 있을까요?
+
+<br />
+
+## 개선된 컴포넌트 2. Jotai
+
+위 폼을 [Jotai](https://jotai.org/) 를 사용하여 개선하였습니다. ([recoil](https://recoiljs.org/) 을 사용해도 괜찮습니다.)
+
+타이핑을 해보면, 아까와는 달리 `<Form>` 이 re-render 되지 않습니다.
+
+<iframe
+  src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?fontsize=14&hidenavigation=1&initialpath=%2Fjotai&module=%2Fsrc%2FJotaiForm%2FJotaiForm.tsx&theme=dark"
+  width="100%"
+  height="450"
+  title="jotai form reference with RR"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+/>
+
+<details>
+<summary>
+  <b>위 폼 요소의 코드는 다음과 같습니다. (클릭)</b>
+</summary>
+
+코드량이 많아 CodeSandbox 에서 보시는 것을 추천합니다. [링크](https://codesandbox.io/s/jotai-form-reference-with-rr-qfxcfn?from-embed=&initialpath=/jotai&file=/src/JotaiForm/JotaiForm.tsx)
+
+```tsx title="JotaiForm.tsx"
+import { FormProvider } from './context/form';
+
+import EmailInput from './EmailInput';
+import PasswordInput from './PasswordInput';
+
+export default function JotaiForm() {
+  return (
+    <FormProvider>
+      <h1>Jotai Form</h1>
+
+      <EmailInput />
+
+      <PasswordInput />
+
+      <button type="submit">Submit</button>
+    </FormProvider>
+  );
+}
+```
+
+```tsx title="context/form.tsx"
+import { atom, PrimitiveAtom, useAtom } from 'jotai';
+import { useAtomCallback } from 'jotai/utils';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import Form from '../../components/Form';
+
+type FormState = {
+  email: PrimitiveAtom<string>;
+  password: PrimitiveAtom<string>;
+};
+
+const FormStateContext = createContext<FormState | null>(null);
+
+export function FormProvider({ children }: { children: React.ReactNode }) {
+  const formState = useMemo(() => ({ email: atom(''), password: atom('') }), []);
+
+  const payloadAtom = useMemo(() => {
+    return atom((get) => {
+      return Object.fromEntries(
+        Object.entries(formState).map(([key, value]) => {
+          return [key, get(value)];
+        }),
+      );
+    });
+  }, [formState]);
+
+  const handleSubmit = useAtomCallback(
+    useCallback(
+      (get, _, event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const payload = get(payloadAtom);
+
+        console.debug(payload);
+      },
+      [payloadAtom],
+    ),
+  );
+
+  return (
+    <FormStateContext.Provider value={formState}>
+      <Form onSubmit={handleSubmit}>{children}</Form>
+    </FormStateContext.Provider>
+  );
+}
+
+export function useFormFieldState(name: keyof FormState) {
+  const context = useContext(FormStateContext);
+
+  if (context == null) {
+    throw new Error(`Cannot find <FormStateContext.Provider>`);
+  }
+
+  return useAtom(context[name]);
+}
+```
+
+```tsx title="EmailInput.tsx"
+import Input from '../components/Input';
+import { useFormFieldState } from './context/form';
+
+export default function EmailInput() {
+  const [value, setFormState] = useFormFieldState('email');
+
+  return (
+    <Input
+      type="text"
+      placeholder="email"
+      value={value}
+      onChange={(event) => {
+        setFormState(event.target.value);
+      }}
+    />
+  );
+}
+```
+
+```tsx title="PasswordInput.tsx"
+import Input from '../components/Input';
+import { useFormFieldState } from './context/form';
+
+export default function PasswordInput() {
+  const [value, setFormState] = useFormFieldState('password');
+
+  return (
+    <Input
+      type="password"
+      placeholder="password"
+      value={value}
+      onChange={(event) => {
+        setFormState(event.target.value);
+      }}
+    />
+  );
+}
+```
+
+</details>
+
+이 글은 Jotai 에 대한 자세한 설명은 하지 않을 것이지만,
+원활한 이해를 위해 가벼운 설명을 하자면 아래와 같습니다.
+
+- [atom](https://jotai.org/docs/api/core#atom) function 을 호출하여 state 를 얻을 수 있는 atom 을 생성할 수 있습니다.
+- atom 은 state 가 update 되더라도 re-render 를 일으키지 않습니다.
+- useAtom(atom), useAtomValue(atom) 같은 훅을 사용하면, state 를 얻을 수 있으며
+  해당 훅을 호출한 컴포넌트는 re-render 됩니다.
+
+<br />
+
+### 개선 포인트 1. Context API + Jotai
+
+이전과 동일하게 Context API 를 사용하고, value 로 jotai atom 을 주입할 것입니다.
+
+```tsx title="context/form.tsx"
+export function FormProvider({ children }: { children: React.ReactNode }) {
+  const formState = { email: atom(''), password: atom('') };
+
+  const payloadAtom = useMemo(() => {
+    return atom((get) => {
+      return Object.fromEntries(
+        Object.entries(formState).map(([key, value]) => {
+          return [key, get(value)];
+        }),
+      );
+    });
+  }, [formState]);
+
+  return (
+    <FormStateContext.Provider value={formState}>
+      <Form onSubmit={handleSubmit}>{children}</Form>
+    </FormStateContext.Provider>
+  );
+}
+```
+
+formState 에서 각 필드마다 atom 을 생성해줍니다.
+해당 atom 들은 각 필드에서 Context 를 통해 넘겨 받아 각자의 atom 을 업데이트 할 것입니다.
+
+`payloadAtom` 은 [derived atom](https://jotai.org/docs/guides/composing-atoms#basic-derived-atoms) 입니다.
+formState 에서 property value 로 갖고 있는 atom 들을 기반으로 만들어진 atom 이며,
+각 필드에서 atom 을 업데이트 하면 `payloadAtom` 과 매핑된 state 도 업데이트 됩니다.
+그러나, re-render 를 일으키지 않습니다.
+
+또한, payloadAtom 이 오로지 formState 의 atom 으로부터 update 될 수 있도록 하기 위해
+`write` function 이 없는 `read-only atom` 으로 만듭니다.
+
+```tsx title="PasswordInput.tsx"
+import Input from '../components/Input';
+import { useFormFieldState } from './context/form';
+
+export default function PasswordInput() {
+  const [value, setFormState] = useFormFieldState('password');
+
+  return (
+    <Input
+      type="password"
+      placeholder="password"
+      value={value}
+      onChange={(event) => {
+        setFormState(event.target.value);
+      }}
+    />
+  );
+}
+
+// context/form.tsx
+
+export function useFormFieldState(name: keyof FormState) {
+  const context = useContext(FormStateContext);
+
+  if (context == null) {
+    throw new Error(`Cannot find <FormStateContext.Provider>`);
+  }
+
+  return useAtom(context[name]);
+}
+```
+
+각 Form 필드 컴포넌트는 `useContext` 를 호출하여 formState 를 얻고,
+이를 name 으로 인덱싱하여 자신이 업데이트 해야 할 atom 을 얻습니다.
+그리고 이를 useAtom 을 호출하여 값과 업데이트 함수를 얻습니다.
+
+<br />
+
+### 개선 포인트 2. useAtomCallback
+
+위와 같이 작성한들, submit 을 위해 `useAtom(payloadAtom)` 을 호출하면
+payloadAtom 이 매핑된 상태가 업데이트 될 때마다 FormProvider 는 re-render 가 될 것이고,
+Form 태그는 부모인 FormProvider 에 의해 re-render 를 일으킬 것입니다.
+
+이 점은 [useAtomCallback](https://jotai.org/docs/utils/use-atom-callback) 을 사용하여 해결할 수 있습니다.
+
+useAtomCallback 은 callback 함수를 받아
+**해당 함수가 atom 을 구독하지 않고**
+상태를 asynchronous 하게 읽을 수 있습니다.
+
+```tsx title="context/form.tsx"
+// ...
+const handleSubmit = useAtomCallback(
+  useCallback(
+    (get, _, event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      const payload = get(payloadAtom);
+
+      console.debug(payload);
+    },
+    [payloadAtom],
+  ),
+);
+
+// ...
+```
+
+위와 같이 작성하면, payloadAtom 이 업데이트 되어도
+이를 구독하지 않으므로 re-render 를 일으키지 않으며 동시에 payloadAtom 값으로 다루어 절차를 처리할 수 있는 함수를 작성할 수 있습니다.
+
+<br />
+
+## 개선된 컴포넌트 3. React Hook Form
+
+위 폼을 [Uncontrolled Component](https://reactjs.org/docs/uncontrolled-components.html) 로 작성할 수도 있습니다!
+
+Uncontrolled Component 는 form data 를 리액트 컴포넌트에서 다루는 것이 아닌,
+DOM 에 내장된 데이터를 이용해 다루게 됩니다.
+
+Uncontrolled Component 를 그냥 `useRef` 등으로 사용하기엔 여러 부차적인 작업들이 필요해서,
+[React Hook Form](https://react-hook-form.com/) 이라는 라이브러리의 도움을 받아 작성해보도록 하겠습니다.
+
+<iframe
+  src="https://codesandbox.io/embed/jotai-form-reference-with-rr-qfxcfn?fontsize=14&hidenavigation=1&initialpath=%2Freact-hook-form&module=%2Fsrc%2FRHFForm%2FRHFForm.tsx&theme=dark"
+  width="100%"
+  height="450"
+  title="jotai form reference with RR"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+/>
+
+<details>
+<summary>
+  <b>위 폼 요소의 코드는 다음과 같습니다. (클릭)</b>
+</summary>
+
+CodeSandbox [링크](https://codesandbox.io/s/jotai-form-reference-with-rr-qfxcfn?from-embed=&initialpath=/react-hook-form&file=/src/RHFForm/RHFForm.tsx)
+
+```tsx title="RHFForm.tsx"
+import { Controller, useForm } from 'react-hook-form';
+import Form from '../components/Form';
+import Input from '../components/Input';
+
+export default function RHFForm() {
+  const { control, handleSubmit } = useForm();
+
+  return (
+    <Form onSubmit={handleSubmit(console.debug)}>
+      <h1>RHF Form</h1>
+
+      <Controller
+        control={control}
+        defaultValue=""
+        name="email"
+        render={({ field }) => <Input type="text" placeholder="email" value={field.value} onChange={field.onChange} />}
+      />
+
+      <Controller
+        control={control}
+        defaultValue=""
+        name="password"
+        render={({ field }) => (
+          <Input type="password" placeholder="password" value={field.value} onChange={field.onChange} />
+        )}
+      />
+
+      <button type="submit">Submit</button>
+    </Form>
+  );
+}
+```
+
+</details>
+
+React Hook Form 은 폼 요소들을 [Uncontrolled Component](https://reactjs.org/docs/uncontrolled-components.html) 로 구성할 수 있으며,
+폼을 위한 다양한 유틸 요소들을 제공해줍니다.
+
+`<Input />` 은 Controlled Component 이므로, 이를 핸들링하기 위해
+React Hook Form 에서 제공해주는 [Controller](https://react-hook-form.com/api/usecontroller/controller/#main) 를 사용합니다.
+
+이후 [handleSubmit](https://react-hook-form.com/api/useform/handlesubmit) 을 활용해 submit 이벤트에 대응할 수 있습니다.
+
+<br />
+
+## 정리
+
+사실 React 는 이미 Virtual DOM 과 같은 내장 기술을 활용해 최적화를 하고 있으므로,
+소규모 앱에선 이를 크게 신경 쓸 필요는 없다고 생각합니다.
+
+그러나 잦은 `re-render` 로 인한 유저 반응성 저해나 Side Effect 로 고민을 하고 계신다면,
+언급한 다양한 기술을 활용해 이를 해소 할 수 있다고 생각합니다.
