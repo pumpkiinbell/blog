@@ -23,12 +23,6 @@ const navbar = {
       to: 'blog',
     },
     {
-      type: 'doc',
-      position: 'left',
-      label: 'Documents',
-      docId: 'index',
-    },
-    {
       type: 'search',
       position: 'right',
     },
