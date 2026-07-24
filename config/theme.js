@@ -31,6 +31,11 @@ const navbar = {
       label: 'GitHub',
       href: 'https://github.com/pumpkiinbell',
     },
+    {
+      position: 'right',
+      label: 'RSS',
+      href: '/blog/rss.xml',
+    },
   ],
 };
 
